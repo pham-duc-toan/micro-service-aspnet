@@ -36,9 +36,9 @@ public class ProductRepository
   public async Task DeleteProduct(long id)
   {
     var product = await GetByIdAsync(id);
-    if (product is not null)
-    {
-      await DeleteAsync(product);
-    }
+    if (product is null)
+      throw new KeyNotFoundException($"Product with id {id} was not found");
+
+    await DeleteAsync(product);
   }
 }

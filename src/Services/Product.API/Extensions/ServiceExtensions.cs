@@ -1,5 +1,6 @@
 ﻿using Contracts.Common.Interfaces;
 using Infrastructure.Common;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
 using MySqlConnector;
@@ -15,6 +16,7 @@ public static class ServiceExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
+        services.AddAutoMapper(typeof(MappingProfile));
 
         services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
