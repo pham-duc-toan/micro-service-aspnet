@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Routing;
 using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Product.API.Persistence;
+using Product.API.Repositories;
+using Product.API.Repositories.Interfaces;
 
 namespace Product.API.Extensions;
 
@@ -29,7 +31,8 @@ public static class ServiceExtensions
     {
         return services
             .AddScoped(typeof(IRepositoryBaseAsync<,,>), typeof(RepositoryBaseAsyncAsync<,,>))
-            .AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
+            .AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>))
+            .AddScoped<IProductRepository, ProductRepository>();
     }
 
     private static IServiceCollection ConfigureProductDbContext(this IServiceCollection services, IConfiguration configuration)

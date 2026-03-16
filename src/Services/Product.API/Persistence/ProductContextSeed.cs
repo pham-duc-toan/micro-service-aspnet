@@ -12,9 +12,9 @@ public class ProductContextSeed
     }
   }
 
-  private static IEnumerable<Entities.Product> GetCatalogProducts()
+  private static IEnumerable<Entities.CatalogProduct> GetCatalogProducts()
   {
-    return new List<Entities.Product>
+    return new List<Entities.CatalogProduct>
         {
             new()
             {

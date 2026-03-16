@@ -1,8 +1,5 @@
-using Contracts.Common.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Product.API.Persistence;
-using CatalogProduct = Product.API.Entities.Product;
+using Product.API.Repositories.Interfaces;
 
 namespace Product.API.Controllers;
 
@@ -10,17 +7,17 @@ namespace Product.API.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-  private readonly IRepositoryBaseAsync<CatalogProduct, long, ProductContext> _repository;
+  private readonly IProductRepository _productRepository;
 
-  public ProductsController(IRepositoryBaseAsync<CatalogProduct, long, ProductContext> repository)
+  public ProductsController(IProductRepository productRepository)
   {
-    _repository = repository;
+    _productRepository = productRepository;
   }
 
   [HttpGet]
   public async Task<IActionResult> GetProducts()
   {
-    var result = await _repository.FindAll().ToListAsync();
+    var result = await _productRepository.GetProducts();
     return Ok(result);
   }
 }

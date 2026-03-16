@@ -9,7 +9,7 @@ public class ProductContext : DbContext
     {
     }
 
-    public DbSet<Entities.Product> Products => Set<Entities.Product>();
+    public DbSet<Entities.CatalogProduct> Products => Set<Entities.CatalogProduct>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
     {
