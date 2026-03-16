@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Contracts.Common.Interfaces;
+using Infrastructure.Common;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
 using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
@@ -18,8 +20,16 @@ public static class ServiceExtensions
         services.AddSwaggerGen();
 
         services.ConfigureProductDbContext(configuration);
+        services.AddInfrastructureServices();
 
         return services;
+    }
+
+    private static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    {
+        return services
+            .AddScoped(typeof(IRepositoryBaseAsync<,,>), typeof(RepositoryBaseAsyncAsync<,,>))
+            .AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
     }
 
     private static IServiceCollection ConfigureProductDbContext(this IServiceCollection services, IConfiguration configuration)
