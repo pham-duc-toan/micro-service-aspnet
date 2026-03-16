@@ -1,6 +1,10 @@
 
 using Common.Logging;
+using Product.API.Extensions;
+using Product.API.Persistence;
 using Serilog;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 Log.Information("Starting Product API up");
@@ -9,30 +13,37 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    builder.Host.AddAppConfigurations();
     builder.Host.UseSerilog(Serilogger.Configure);
-    // Add services to the container.
-
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
 
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    app.UseInfrastructure();
+
+    app.Lifetime.ApplicationStarted.Register(() =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+        var server = app.Services.GetRequiredService<IServer>();
+        var addressesFeature = server.Features.Get<IServerAddressesFeature>();
+        var addresses = addressesFeature?.Addresses;
 
-    app.UseHttpsRedirection();
+        if (addresses is null || addresses.Count == 0)
+        {
+            Log.Information("Swagger running on: {SwaggerUrl}", "http://localhost:5002/swagger/");
+            return;
+        }
 
-    app.UseAuthorization();
+        foreach (var address in addresses)
+        {
+            Log.Information("Swagger running on: {SwaggerUrl}", $"{address.TrimEnd('/')}/swagger");
+        }
+    });
 
-    app.MapControllers();
-
-    app.Run();
+    app.MigrateDatabase<ProductContext>((context, _) =>
+    {
+        ProductContextSeed.SeedProductAsync(context, Log.Logger).Wait();
+    })
+    .Run();
 }
 catch (Exception ex)
 {
