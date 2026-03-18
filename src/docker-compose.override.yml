@@ -121,3 +121,18 @@ services:
     ports:
       - "6002:80"
     restart: always
+
+  customer.api:
+    build:
+      context: .
+      dockerfile: Services/Customer.API/Dockerfile
+    container_name: customer.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - "ConnectionStrings:CustomerDB=Host=customerdb;Port=5432;Database=CustomerDb;Username=admin;Password=admin1234"
+    depends_on:
+      - customerdb
+    ports:
+      - "6003:80"
+    restart: always

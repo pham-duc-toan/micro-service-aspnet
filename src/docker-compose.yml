@@ -37,6 +37,9 @@ services:
   product.api:
     image: ${DOCKER_REGISTRY-}product-api:${PLATFORM:-linux}-${TAG:-latest}
 
+  customer.api:
+    image: ${DOCKER_REGISTRY-}customer-api:${PLATFORM:-linux}-${TAG:-latest}
+
 #network section
 networks:
   default:
