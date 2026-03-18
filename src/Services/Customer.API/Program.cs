@@ -1,5 +1,7 @@
 
 using Common.Logging;
+using Customer.API.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -12,12 +14,17 @@ try
     builder.Host.UseSerilog(Serilogger.Configure);
     // Add services to the container.
 
+    builder.Services.AddDbContext<CustomerContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("CustomerDB")));
+
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
     var app = builder.Build();
+
+    // app.SeedCustomerData();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -26,7 +33,7 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    // app.UseHttpsRedirection();
 
     app.UseAuthorization();
 
