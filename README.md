@@ -26,7 +26,7 @@ Note: use `localhost` or `127.0.0.1` when opening services from browser. Do not 
 
 ## Docker Application URLs - LOCAL Environment (Docker Container):
 
-- Portainer: http://localhost:9000 - username: admin ; pass: admin1234
+- Portainer: http://localhost:9000 - username: admin ; pass: admin123456789
 - Kibana: http://localhost:5601 - username: elastic ; pass: admin
 - RabbitMQ: http://localhost:15672 - username: guest ; pass: guest
 

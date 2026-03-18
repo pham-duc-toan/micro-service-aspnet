@@ -5,6 +5,7 @@ VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4E7BD81-CED8-4652-82F8-5008C8B218D6}"
 	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
 		.gitignore = .gitignore
 		src\docker-compose.override.yml = src\docker-compose.override.yml
 		src\docker-compose.yml = src\docker-compose.yml

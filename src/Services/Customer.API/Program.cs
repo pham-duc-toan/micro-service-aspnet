@@ -36,7 +36,13 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Unhandlerd exception");
+    string type = ex.GetType().Name;
+    if (type.Equals("StopTheHostException", StringComparison.Ordinal))
+    {
+        throw;
+    }
+
+    Log.Fatal(ex, messageTemplate: $"Unhandled exception: {ex.Message}");
 }
 finally
 {
