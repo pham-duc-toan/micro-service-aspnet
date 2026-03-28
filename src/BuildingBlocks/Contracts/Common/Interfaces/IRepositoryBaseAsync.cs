@@ -5,9 +5,7 @@ using System.Linq.Expressions;
 
 namespace Contracts.Common.Interfaces;
 
-public interface IRepositoryQueryBase<T, K, TContext>
-    where T : EntityBase<K>
-    where TContext : DbContext
+public interface IRepositoryQueryBase<T, in K> where T : EntityBase<K>
 {
   IQueryable<T> FindAll(bool trackChanges = false);
 
@@ -31,10 +29,14 @@ public interface IRepositoryQueryBase<T, K, TContext>
       params Expression<Func<T, object>>[] includeProperties);
 }
 
-public interface IRepositoryBaseAsync<T, K, TContext>
-    : IRepositoryQueryBase<T, K, TContext>
+public interface IRepositoryQueryBase<T, K, TContext> : IRepositoryQueryBase<T, K>
     where T : EntityBase<K>
     where TContext : DbContext
+{
+}
+
+public interface IRepositoryBaseAsync<T, K> : IRepositoryQueryBase<T, K>
+    where T : EntityBase<K>
 {
   Task<K> CreateAsync(T entity);
 
@@ -55,4 +57,10 @@ public interface IRepositoryBaseAsync<T, K, TContext>
   Task EndTransactionAsync();
 
   Task RollBackTransactionAsync();
+}
+
+public interface IRepositoryBaseAsync<T, K, TContext> : IRepositoryBaseAsync<T, K>
+    where T : EntityBase<K>
+    where TContext : DbContext
+{
 }
