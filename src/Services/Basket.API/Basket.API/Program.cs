@@ -1,16 +1,25 @@
-
+using Basket.API.Extensions;
 using Common.Logging;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
-Log.Information("Starting Basket API up");
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+var builder = WebApplication.CreateBuilder(args);
+
+Log.Information(messageTemplate: $"Start {builder.Environment.ApplicationName} up");
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
-
     builder.Host.UseSerilog(Serilogger.Configure);
-    // Add services to the container.
+    builder.Host.AddAppConfigurations();
+    builder.Services.ConfigureServices();
+    builder.Services.ConfigureRedis(builder.Configuration);
+
+    builder.Services.Configure<RouteOptions>(options
+        => options.LowercaseUrls = true);
 
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -23,24 +32,28 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI((SwaggerUIOptions c) => c.SwaggerEndpoint(
+            url: "/swagger/v1/swagger.json",
+            name: $"{builder.Environment.ApplicationName} v1"));
     }
 
-    app.UseHttpsRedirection();
+    // app.UseHttpsRedirection();
 
     app.UseAuthorization();
 
-    app.MapControllers();
+    app.MapDefaultControllerRoute();
 
     app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Unhandlerd exception");
+    string type = ex.GetType().Name;
+    if (type.Equals(value: "StopTheHostException", StringComparison.Ordinal)) throw;
+
+    Log.Fatal(ex, messageTemplate: $"Unhandled exception: {ex.Message}");
 }
 finally
 {
-    Log.Information("Shut down Basket API complete");
+    Log.Information(messageTemplate: $"Shut down {builder.Environment.ApplicationName} complete");
     Log.CloseAndFlush();
 }
-

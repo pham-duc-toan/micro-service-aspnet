@@ -40,6 +40,12 @@ services:
   customer.api:
     image: ${DOCKER_REGISTRY-}customer-api:${PLATFORM:-linux}-${TAG:-latest}
 
+  basket.api:
+    image: ${DOCKER_REGISTRY-}basket-api:${PLATFORM:-linux}-${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Services/Basket.API/Basket.API/Dockerfile
+
 #network section
 networks:
   default:
