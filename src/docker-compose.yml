@@ -17,8 +17,8 @@ services:
   inventorydb:
    image: mongo
   
-  #hangfiredb:
-  #  image: mongo
+  hangfiredb:
+    image: mongo
 
   #infrastructure section
   rabbitmq:
@@ -37,47 +37,47 @@ services:
   #  image: docker.elastic.co/kibana/kibana:7.17.7
 
   #microservices api section
-  product.api:
-    image: ${DOCKER_REGISTRY-}product-api:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Product.API/Dockerfile
+  #product.api:
+  #  image: ${DOCKER_REGISTRY-}product-api:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Product.API/Dockerfile
 
-  customer.api:
-    image: ${DOCKER_REGISTRY-}customer-api:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Customer.API/Dockerfile
+  #customer.api:
+  #  image: ${DOCKER_REGISTRY-}customer-api:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Customer.API/Dockerfile
 
-  basket.api:
-    image: ${DOCKER_REGISTRY-}basket-api:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Basket.API/Dockerfile
+  #basket.api:
+  #  image: ${DOCKER_REGISTRY-}basket-api:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Basket.API/Dockerfile
 
-  order.api:
-    image: ${DOCKER_REGISTRY-}order-api:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Ordering/Ordering.API/Dockerfile
+  #order.api:
+  #  image: ${DOCKER_REGISTRY-}order-api:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Ordering/Ordering.API/Dockerfile
 
-  inventory.product.api:
-    image: ${DOCKER_REGISTRY-}inventory-product-api:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Inventory/Inventory.Product.API/Dockerfile
+  #inventory.product.api:
+  #  image: ${DOCKER_REGISTRY-}inventory-product-api:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Inventory/Inventory.Product.API/Dockerfile
 
-  inventory.grpc:
-    image: ${DOCKER_REGISTRY-}inventory-grpc:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Services/Inventory/Inventory.Grpc/Dockerfile
+  #inventory.grpc:
+  #  image: ${DOCKER_REGISTRY-}inventory-grpc:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Inventory/Inventory.Grpc/Dockerfile
 
-  apigw.ocelot:
-    image: ${DOCKER_REGISTRY-}apigw-ocelot:${PLATFORM:-linux}-${TAG:-latest}
-    build:
-      context: .
-      dockerfile: ApiGateways/OcelotApiGw/Dockerfile
+  #apigw.ocelot:
+  #  image: ${DOCKER_REGISTRY-}apigw-ocelot:${PLATFORM:-linux}-${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: ApiGateways/OcelotApiGw/Dockerfile
 
 #network section
 networks:
@@ -101,8 +101,8 @@ volumes:
   #  name: jaeger_data
   mongo_data:
    name: mongo_data
-  #hangfire_mongo_data:
-  #  name: hangfire_mongo_data
+  hangfire_mongo_data:
+    name: hangfire_mongo_data
   pgadmin_data:
     name: pgadmin_data
   rabbitmq_data:
