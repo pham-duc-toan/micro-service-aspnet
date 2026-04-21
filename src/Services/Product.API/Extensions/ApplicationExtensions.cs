@@ -9,7 +9,12 @@ namespace Product.API.Extensions
         public static void UseInfrastructure(this IApplicationBuilder app)
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.OAuthClientId("tedu_microservices_swagger");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product API");
+                c.DisplayRequestDuration();
+            });
             app.UseMiddleware<ErrorWrappingMiddleware>();
             app.UseAuthentication();
             app.UseRouting();
