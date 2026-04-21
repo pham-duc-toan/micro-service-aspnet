@@ -1,4 +1,6 @@
-﻿using Shared.Configurations;
+﻿using Contracts.ScheduledJobs;
+using Infrastructure.ScheduleJobs;
+using Shared.Configurations;
 
 namespace Hangfire.API.Extensions;
 
@@ -8,5 +10,10 @@ public static class ServiceExtensions
     {
         var hangFireSettings = configuration.GetSection(nameof(HangFireSettings)).Get<HangFireSettings>();
         services.AddSingleton(hangFireSettings);
+    }
+
+    internal static void ConfigureServices(this IServiceCollection services)
+    {
+        services.AddScoped<IScheduledJobService, HangfireService>();
     }
 }
