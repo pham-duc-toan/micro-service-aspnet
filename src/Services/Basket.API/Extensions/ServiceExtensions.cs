@@ -1,10 +1,14 @@
 ﻿using Basket.API.GrpcServices;
 using Basket.API.Repositories;
 using Basket.API.Repositories.Interfaces;
+using Basket.API.Services;
+using Basket.API.Services.Interfaces;
 using Contracts.Common.Interfaces;
+using Contracts.Services;
 using EventBus.Messages;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
+using Infrastructure.Services;
 using Inventory.Grpc.Protos;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -36,6 +40,9 @@ namespace Basket.API.Extensions
 
             var cacheSettings = configuration.GetSection(nameof(CacheSettings)).Get<CacheSettings>();
             services.AddSingleton(cacheSettings);
+
+            var urlSettings = configuration.GetSection(nameof(UrlSettings)).Get<UrlSettings>();
+            services.AddSingleton(urlSettings);
         }
 
         private static void ConfigureRedis(this IServiceCollection services)
@@ -55,7 +62,9 @@ namespace Basket.API.Extensions
         private static void AddInfrastructureService(this IServiceCollection services)
         {
             services.AddScoped<IBasketRepository, BasketRepository>()
-                    .AddTransient<ISerializerService, SerializerService>();
+                    .AddTransient<ISerializerService, SerializerService>()
+                    .AddScoped<IEmailTemplateService, EmailTemplateService>()
+                    .AddScoped<IBasketEmailService, BasketEmailService>();
         }
 
         private static void ConfigureMassTransit(this IServiceCollection services)
