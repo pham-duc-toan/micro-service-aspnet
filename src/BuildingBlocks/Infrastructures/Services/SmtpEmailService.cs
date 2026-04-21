@@ -1,30 +1,76 @@
-using Contracts.Services;
+﻿using Contracts.Services;
 using Infrastructure.Configurations;
+using MailKit.Net.Smtp;
 using MimeKit;
+using Serilog;
 using Shared.Services.Email;
-using ILogger = Serilog.ILogger;
-using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace Infrastructure.Services;
 
-public class SmtpEmailService : ISmtpEmailService
+public class EmailSMTPService : IEmailSMTPService
 {
     private readonly ILogger _logger;
-    private readonly SMTPEmailSetting _settings;
+    private readonly EmailSMTPSetting _emailSetting;
     private readonly SmtpClient _smtpClient;
 
-    public SmtpEmailService(ILogger logger, SMTPEmailSetting settings)
+    public EmailSMTPService(ILogger logger, EmailSMTPSetting emailSetting)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _logger = logger;
+        _emailSetting = emailSetting;
         _smtpClient = new SmtpClient();
     }
 
-    public async Task SendEmailAsync(MailRequest request, CancellationToken cancellationToken = new ())
+    public async Task SendEmailAsync(MailRequest request, CancellationToken cancellationToken = default)
+    {
+        var emailMessage = GetEmailMessage(request);
+
+        try
+        {
+            await _smtpClient.ConnectAsync(_emailSetting.SMTPServer, _emailSetting.Port,
+                _emailSetting.UseSsl, cancellationToken);
+            await _smtpClient.AuthenticateAsync(_emailSetting.Username, _emailSetting.Password, cancellationToken);
+            await _smtpClient.SendAsync(emailMessage, cancellationToken);
+            await _smtpClient.DisconnectAsync(true, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+        }
+        finally
+        {
+            await _smtpClient.DisconnectAsync(true, cancellationToken);
+            _smtpClient.Dispose();
+        }
+    }
+
+    public void SendEmail(MailRequest request)
+    {
+        var emailMessage = GetEmailMessage(request);
+
+        try
+        {
+            _smtpClient.Connect(_emailSetting.SMTPServer, _emailSetting.Port,
+                _emailSetting.UseSsl);
+            _smtpClient.Authenticate(_emailSetting.Username, _emailSetting.Password);
+            _smtpClient.Send(emailMessage);
+            _smtpClient.Disconnect(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+        }
+        finally
+        {
+            _smtpClient.Disconnect(true);
+            _smtpClient.Dispose();
+        }
+    }
+
+    private MimeMessage GetEmailMessage(MailRequest request)
     {
         var emailMessage = new MimeMessage
         {
-            Sender = new MailboxAddress(_settings.DisplayName, request.From ?? _settings.From),
+            Sender = new MailboxAddress(_emailSetting.DisplayName, request.From ?? _emailSetting.From),
             Subject = request.Subject,
             Body = new BodyBuilder
             {
@@ -41,26 +87,9 @@ public class SmtpEmailService : ISmtpEmailService
         }
         else
         {
-            var toAddress = request.ToAddress;
-            emailMessage.To.Add(MailboxAddress.Parse(toAddress));
+            emailMessage.To.Add(MailboxAddress.Parse(request.ToAddress));
         }
 
-        try
-        {
-            await _smtpClient.ConnectAsync(_settings.SMTPServer, _settings.Port,
-                _settings.UseSsl, cancellationToken);
-            await _smtpClient.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
-            await _smtpClient.SendAsync(emailMessage, cancellationToken);
-            await _smtpClient.DisconnectAsync(true, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex.Message, ex);
-        }
-        finally
-        {
-            await _smtpClient.DisconnectAsync(true, cancellationToken);
-            _smtpClient.Dispose();
-        }
+        return emailMessage;
     }
 }
