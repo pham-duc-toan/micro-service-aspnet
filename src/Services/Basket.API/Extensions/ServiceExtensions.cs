@@ -3,6 +3,7 @@ using Basket.API.Repositories.Interfaces;
 using Contracts.Common.Interfaces;
 using EventBus.Messages;
 using Infrastructure.Common;
+using Infrastructure.Extensions;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shared.Configurations;
@@ -20,9 +21,9 @@ namespace Basket.API.Extensions
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
             services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
 
-            services.ConfigureRedis(configuration);
+            services.ConfigureRedis();
             services.AddInfrastructureService();
-            services.ConfigureMassTransit(configuration);
+            services.ConfigureMassTransit();
         }
 
         private static void AddConfigurationSettings(this IServiceCollection services, IConfiguration configuration)
@@ -34,17 +35,17 @@ namespace Basket.API.Extensions
             services.AddSingleton(cacheSettings);
         }
 
-        private static void ConfigureRedis(this IServiceCollection services, IConfiguration configuration)
+        private static void ConfigureRedis(this IServiceCollection services)
         {
-            var redisConnectionString = configuration.GetSection("CacheSettings:ConnectionString").Value;
-            if (string.IsNullOrEmpty(redisConnectionString))
+            var settings = services.GetOptions<CacheSettings>(nameof(CacheSettings));
+            if (string.IsNullOrEmpty(settings.ConnectionString))
             {
                 throw new ArgumentException("Redis Conenction string is not configured!");
             }
 
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = redisConnectionString;
+                options.Configuration = settings.ConnectionString;
             });
         }
 
@@ -54,9 +55,9 @@ namespace Basket.API.Extensions
                     .AddTransient<ISerializerService, SerializerService>();
         }
 
-        private static void ConfigureMassTransit(this IServiceCollection services, IConfiguration configuration)
+        private static void ConfigureMassTransit(this IServiceCollection services)
         {
-            var settings = configuration.GetSection(nameof(EventBusSettings)).Get<EventBusSettings>();
+            var settings = services.GetOptions<EventBusSettings>(nameof(EventBusSettings));
             if (settings == null || string.IsNullOrEmpty(settings.HostAddress))
             {
                 throw new ArgumentException("EventBusSettings is not configured!");
