@@ -1,6 +1,5 @@
 ﻿namespace Shared.Configurations;
 
-public class CacheSettings
+public class CacheSettings : DatabaseSettings
 {
-    public string ConnectionString { get; set; }
 }

@@ -1,8 +1,7 @@
 ﻿using HealthChecks.UI.Client;
-using Infrastructure.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
-namespace Product.API.Extensions
+namespace Basket.API.Extensions
 {
     public static class ApplicationExtensions
     {
@@ -10,13 +9,12 @@ namespace Product.API.Extensions
         {
             app.UseSwagger();
             app.UseSwaggerUI();
-            app.UseMiddleware<ErrorWrappingMiddleware>();
-            app.UseAuthentication();
-            app.UseRouting();
-            //app.UseHttpsRedirection(); // for production only
+
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
+            app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHealthChecks("/hc", new HealthCheckOptions
