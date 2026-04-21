@@ -1,10 +1,10 @@
-namespace Shared.SeedWork;
+﻿namespace Shared.SeedWork.ApiResult;
 
 public class ApiResult<T>
 {
-    public ApiResult()
-    {
-    }
+    public T Data { get; set; }
+    public string Message { get; set; }
+    public bool IsSucceeded { get; set; }
 
     public ApiResult(bool isSucceeded, string message = null)
     {
@@ -18,8 +18,4 @@ public class ApiResult<T>
         Message = message;
         IsSucceeded = isSucceeded;
     }
-
-    public bool IsSucceeded { get; set; }
-    public string Message { get; set; }
-    public T Data { get; }
 }
