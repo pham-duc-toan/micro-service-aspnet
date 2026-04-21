@@ -1,17 +1,17 @@
-using AutoMapper;
-using Infrastructure.Mappings;
+﻿using AutoMapper;
+using Infrastructure.Extensions;
 using Product.API.Entities;
-using Shared.Dtos.Product;
+using Shared.DTOs.Product;
 
-namespace Product.API;
-
-public class MappingProfile : Profile
+namespace Product.API
 {
-  public MappingProfile()
-  {
-    CreateMap<CatalogProduct, ProductDto>();
-    CreateMap<CreateProductDto, CatalogProduct>();
-    CreateMap<UpdateProductDto, CatalogProduct>()
-        .IgnoreAllNonExisting();
-  }
+    public class MappingProfile : Profile
+    {
+        public MappingProfile()
+        {
+            CreateMap<CatalogProduct, ProductDto>();
+            CreateMap<CreateProductDto, CatalogProduct>();
+            CreateMap<UpdateProductDto, CatalogProduct>().IgnoreAllNonExisting();
+        }
+    }
 }
