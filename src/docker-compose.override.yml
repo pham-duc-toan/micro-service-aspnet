@@ -2,24 +2,27 @@ version: '3.8'
 
 services:
   #database section
-  
+
   #orderdb: sql server
   orderdb:
-    container_name: orderdb
-    environment:
-      SA_PASSWORD: "Passw0rd!"
-      ACCEPT_EULA: "Y"
-    restart: always
-    volumes:
-      - sqlserver_data:/var/lib/sqlserver/data
-    ports:
-      - "1435:1433"
+   container_name: orderdb
+   environment:
+     SA_PASSWORD: "Passw0rd!"
+     ACCEPT_EULA: "Y"
+   restart: always
+   volumes:
+     - sqlserver_data:/var/opt/mssql
+   ports:
+     - "1435:1433"
 
-  #productdb: mysql
+  #productdb: msql
   productdb:
     container_name: productdb
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: "Passw0rd!"
+      MYSQL_TCP_PORT: 3306
+      MYSQL_DATABASE: ProductDB
     restart: always
     volumes:
       - mysql_data:/var/lib/mysql
@@ -46,24 +49,38 @@ services:
     ports:
       - "6379:6379"
   
-  #inventorydb: mongo
-  inventorydb:
-    container_name: inventorydb
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+#  #inventorydb: mongo
+#  inventorydb:
+#    container_name: inventorydb
+#    restart: always
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongo_data:/data/db
 
-  #infrastructure section
-  
+#  #hangfiredb: mongo
+#  hangfiredb:
+#    container_name: hangfiredb
+#    ports:
+#      - "27018:27017"
+#    volumes:
+#      - hangfire_mongo_data:/data/db
+#    restart: always
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: 'admin'
+#      MONGO_INITDB_ROOT_PASSWORD: 'admin'
+
+ #infrastructure section
   rabbitmq:
-    container_name: rabbitmq
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    
+   container_name: rabbitmq
+   restart: always
+   ports:
+     - "5672:5672"
+     - "15672:15672"
+   volumes:
+     - rabbitmq_data:/var/lib/rabbitmq
+   hostname: rabbitmq
+
   pgadmin:
     container_name: pgadmin
     environment:
@@ -85,52 +102,56 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
   
-  elasticsearch:
-    container_name: elasticsearch
-    environment:
-      - xpack.monitoring.enabled=true
-      - xpack.watcher.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - discovery.type=single-node
-    ports:
-      - "9200:9200"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+#  elasticsearch:
+#    container_name: elasticsearch
+#    environment:
+#      - xpack.monitoring.enabled=true
+#      - xpack.watcher.enabled=false
+#      - xpack.security.enabled=true
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - discovery.type=single-node
+##      - ELASTIC_USERNAME=elastic #default username
+#      - ELASTIC_PASSWORD=admin
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - elasticsearch_data:/usr/share/elasticsearch/data
   
-  kibana:
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    ports:
-      - "5601:5601"
+#  kibana:
+#    container_name: kibana
+#    environment:
+#      - ELASTICSEARCH_URL=http://elasticsearch:9200
+#      - ELASTICSEARCH_USERNAME=elastic
+#      - ELASTICSEARCH_PASSWORD=admin
+#    depends_on:
+#      - elasticsearch
+#    ports:
+#      - "5601:5601"
+#    healthcheck:
+#      test: curl -s http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
 
-  # microservices api section
+  #microservices api section
   product.api:
-    build:
-      context: .
-      dockerfile: Services/Product.API/Dockerfile
     container_name: product.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - "ConnectionStrings:DefaultConnectionString=Server=productdb;Port=3306;Database=ProductDB;Uid=root;Pwd=Passw0rd!;"
+      - "ConnectionStrings:DefaultConnectionString=Server=productdb;Port=3306;Database=ProductDB;Uid=root;Pwd=Passw0rd!"
     depends_on:
       - productdb
     ports:
       - "6002:80"
     restart: always
-
+   
   customer.api:
-    build:
-      context: .
-      dockerfile: Services/Customer.API/Dockerfile
     container_name: customer.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - "ConnectionStrings:CustomerDB=Host=customerdb;Port=5432;Database=CustomerDb;Username=admin;Password=admin1234"
+      - "ConnectionStrings:DefaultConnectionString=Server=customerdb;Port=5432;Database=CustomerDb;User Id=admin;Password=admin1234"
     depends_on:
       - customerdb
     ports:
@@ -144,7 +165,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - "CacheSettings:ConnectionString=basketdb:6379"
     depends_on:
-        - basketdb
+      - basketdb
     ports:
       - "6004:80"
     restart: always
@@ -160,3 +181,4 @@ services:
     ports:
       - "6005:80"
     restart: always
+    

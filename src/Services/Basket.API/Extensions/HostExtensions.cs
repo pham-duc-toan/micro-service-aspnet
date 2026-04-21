@@ -1,4 +1,4 @@
-namespace Basket.API.Extensions;
+﻿namespace Basket.API.Extensions;
 
 public static class HostExtensions
 {

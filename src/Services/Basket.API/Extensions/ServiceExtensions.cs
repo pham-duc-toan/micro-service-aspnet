@@ -1,25 +1,79 @@
-using Basket.API.Repositories;
+﻿using Basket.API.Repositories;
 using Basket.API.Repositories.Interfaces;
 using Contracts.Common.Interfaces;
-using Infrastructures.Common;
+using EventBus.Messages;
+using Infrastructure.Common;
+using MassTransit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Shared.Configurations;
 
-namespace Basket.API.Extensions;
-
-public static class ServiceExtensions
+namespace Basket.API.Extensions
 {
-    public static void ConfigureRedis(this IServiceCollection services, IConfiguration configuration)
+    public static class ServiceExtensions
     {
-        var redisConnectionString = configuration.GetSection("CacheSettings:ConnectionString").Value;
-        if (string.IsNullOrEmpty(redisConnectionString))
-            throw new ArgumentException("Redis Connection string is not configured!");
-        // Redis Configuration
-        services.AddStackExchangeRedisCache(options =>
+        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            options.Configuration = redisConnectionString;
-        });
-    }
+            services.AddConfigurationSettings(configuration);
+            services.AddControllers();
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+            services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+            services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
 
-    public static IServiceCollection ConfigureServices(this IServiceCollection services) =>
-        services.AddScoped<IBasketRepository, BasketRepository>()
-            .AddTransient<ISerializerService, SerializerService>();
+            services.ConfigureRedis(configuration);
+            services.AddInfrastructureService();
+            services.ConfigureMassTransit(configuration);
+        }
+
+        private static void AddConfigurationSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            var eventBusSettings = configuration.GetSection(nameof(EventBusSettings)).Get<EventBusSettings>();
+            services.AddSingleton(eventBusSettings);
+
+            var cacheSettings = configuration.GetSection(nameof(CacheSettings)).Get<CacheSettings>();
+            services.AddSingleton(cacheSettings);
+        }
+
+        private static void ConfigureRedis(this IServiceCollection services, IConfiguration configuration)
+        {
+            var redisConnectionString = configuration.GetSection("CacheSettings:ConnectionString").Value;
+            if (string.IsNullOrEmpty(redisConnectionString))
+            {
+                throw new ArgumentException("Redis Conenction string is not configured!");
+            }
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+            });
+        }
+
+        private static void AddInfrastructureService(this IServiceCollection services)
+        {
+            services.AddScoped<IBasketRepository, BasketRepository>()
+                    .AddTransient<ISerializerService, SerializerService>();
+        }
+
+        private static void ConfigureMassTransit(this IServiceCollection services, IConfiguration configuration)
+        {
+            var settings = configuration.GetSection(nameof(EventBusSettings)).Get<EventBusSettings>();
+            if (settings == null || string.IsNullOrEmpty(settings.HostAddress))
+            {
+                throw new ArgumentException("EventBusSettings is not configured!");
+            }
+
+            var mqConnection = new Uri(settings.HostAddress);
+
+            services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
+            services.AddMassTransit(config =>
+            {
+                config.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(mqConnection);
+                });
+                // Publish submit order message, instead of sending it to a specific queue directly.
+                config.AddRequestClient<IBasketCheckoutEvent>();
+            });
+        }
+    }
 }
