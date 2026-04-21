@@ -30,6 +30,12 @@ namespace Basket.API.Repositories
         {
             _logger.Information($"BEGIN: GetBasketByUserName {userName}");
             var cart = await _redisCacheService.GetStringAsync(userName);
+            if (!string.IsNullOrEmpty(cart))
+            {
+                var result = _serializerService.Deserialize<Cart>(cart);
+                var totalPrice = result.TotalPrice;
+                _logger.Information("Total price: {totalPrice}", totalPrice); // index totalPrice field into Elastic search
+            }
             _logger.Information($"END: GetBasketByUserName {userName}");
 
             return string.IsNullOrEmpty(cart) ? null : _serializerService.Deserialize<Cart>(cart);

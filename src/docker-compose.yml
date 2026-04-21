@@ -30,11 +30,11 @@ services:
   portainer:
     image: portainer/portainer-ce
 
-  #elasticsearch:
-  #  image: docker.elastic.co/elasticsearch/elasticsearch:7.17.7
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.7
   
-  #kibana:
-  #  image: docker.elastic.co/kibana/kibana:7.17.7
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.7
 
   #microservices api section
   # product.api:
@@ -101,8 +101,8 @@ volumes:
     name: postgres_data
   portainer_data:
     name: portainer_data
-  #elasticsearch_data:
-  #  name: elasticsearch_data
+  elasticsearch_data:
+    name: elasticsearch_data
   #jaeger_data:
   #  name: jaeger_data
   mongo_data:
