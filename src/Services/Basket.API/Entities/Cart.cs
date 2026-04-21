@@ -1,24 +1,18 @@
-namespace Basket.API.Entities;
-
-public class Cart
+﻿namespace Basket.API.Entities
 {
-    public string UserName { get; set; }
-    public List<CartItem> Items { get; set; } = new();
-
-    public Cart()
+    public class Cart
     {
-    }
+        public Cart() { }
 
-    public Cart(string userName)
-    {
-        UserName = userName;
-    }
-
-    public decimal TotalPrice
-    {
-        get
+        public Cart(string userName)
         {
-            return Items.Sum(item => item.ProductPrice * item.Quantity);
+            UserName = userName;
         }
+
+        public string UserName { get; set; }
+
+        public List<CartItem> Items { get; set; } = new();
+
+        public decimal TotalPrice => Items.Sum(item => item.ItemPrice * item.Quantity);
     }
 }

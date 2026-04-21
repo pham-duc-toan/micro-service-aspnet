@@ -1,9 +1,11 @@
-﻿using Basket.API.Repositories;
+﻿using Basket.API.GrpcServices;
+using Basket.API.Repositories;
 using Basket.API.Repositories.Interfaces;
 using Contracts.Common.Interfaces;
 using EventBus.Messages;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
+using Inventory.Grpc.Protos;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shared.Configurations;
@@ -24,6 +26,7 @@ namespace Basket.API.Extensions
             services.ConfigureRedis();
             services.AddInfrastructureService();
             services.ConfigureMassTransit();
+            services.ConfigureGrpcService();
         }
 
         private static void AddConfigurationSettings(this IServiceCollection services, IConfiguration configuration)
@@ -75,6 +78,13 @@ namespace Basket.API.Extensions
                 // Publish submit order message, instead of sending it to a specific queue directly.
                 config.AddRequestClient<IBasketCheckoutEvent>();
             });
+        }
+
+        private static void ConfigureGrpcService(this IServiceCollection services)
+        {
+            var settings = services.GetOptions<GrpcSettings>(nameof(GrpcSettings));
+            services.AddGrpcClient<StockProtoService.StockProtoServiceClient>(x => x.Address = new Uri(settings.StockUrl));
+            services.AddScoped<StockItemGrpcService>();
         }
     }
 }
