@@ -13,6 +13,7 @@ namespace Product.API.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
+        //private static int count = 0;
 
         public ProductsController(IProductRepository productRepository, IMapper mapper)
         {
@@ -24,6 +25,12 @@ namespace Product.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProductsAsync()
         {
+            //count++;
+            //if (count < 3)
+            //{
+            //    Thread.Sleep(5000);
+            //}
+
             var products = await _productRepository.GetProductsAsync();
             var result = _mapper.Map<IEnumerable<ProductDto>>(products);
             return Ok(result);

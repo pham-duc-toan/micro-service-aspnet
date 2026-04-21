@@ -30,8 +30,8 @@ try
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
+        //app.UseSwagger();
+        //app.UseSwaggerUI();
     }
 
     app.UseCors("CorsPolicy");
@@ -50,6 +50,10 @@ try
     });
 
     app.MapControllers();
+    app.UseSwaggerForOcelotUI(opt =>
+    {
+        opt.PathToSwaggerGenerator = "/swagger/docs";
+    });
     await app.UseOcelot(); // can move top?
     app.Run();
 }
