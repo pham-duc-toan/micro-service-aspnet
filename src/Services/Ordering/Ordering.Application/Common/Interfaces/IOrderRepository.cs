@@ -12,4 +12,8 @@ public interface IOrderRepository : IRepositoryBaseAsync<Order, long>
     Task<Order> UpdateOrderAsync(Order order);
 
     Task DeleteOrderAsync(Order order);
+
+    void CreateOrder(Order order);
+
+    void DeleteOrder(Order order);
 }

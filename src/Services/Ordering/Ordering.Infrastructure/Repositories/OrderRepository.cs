@@ -20,7 +20,7 @@ public class OrderRepository : RepositoryBaseAsync<Order, long, OrderContext>, I
 
     public async Task<long> CreateOrderAsync(Order order)
     {
-        return await CreateAsync(order);
+        return await CreateAsync(order, true);
     }
 
     public async Task<Order> UpdateOrderAsync(Order order)
@@ -31,6 +31,10 @@ public class OrderRepository : RepositoryBaseAsync<Order, long, OrderContext>, I
 
     public async Task DeleteOrderAsync(Order order)
     {
-        await DeleteAsync(order);
+        await DeleteAsync(order, true);
     }
+
+    public void CreateOrder(Order order) => CreateAsync(order);
+
+    public void DeleteOrder(Order order) => DeleteAsync(order);
 }

@@ -26,7 +26,8 @@ public class DeleteOrderCommandHandler : IRequestHandler<DeleteOrderCommand>
 
         _logger.Information($"BEGIN: {MethodName} - Order: {request.Id}");
 
-        await _orderRepository.DeleteOrderAsync(orderEntity);
+        _orderRepository.DeleteOrder(orderEntity);
+        orderEntity.DeleteOrder();
         await _orderRepository.SaveChangeAsync();
 
         _logger.Information($"Order {request.Id} was successfully deleted.");
