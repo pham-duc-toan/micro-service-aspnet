@@ -24,6 +24,7 @@ try
 
     builder.Services.ConfigureOcelot(builder.Configuration);
     builder.Services.ConfigureCors(builder.Configuration);
+    //builder.Services.ConfigureAuthenticationHandler();
 
     var app = builder.Build();
 
@@ -43,9 +44,11 @@ try
     app.UseAuthorization();
     app.UseEndpoints(endpoints =>
     {
-        endpoints.MapGet("/", async context =>
+        endpoints.MapGet("/", context =>
         {
-            await context.Response.WriteAsync($"Hello TEDU members! This is {builder.Environment.ApplicationName}");
+            //await context.Response.WriteAsync($"Hello TEDU members! This is {builder.Environment.ApplicationName}");
+            context.Response.Redirect("swagger/index.html");
+            return Task.CompletedTask;
         });
     });
 
@@ -53,8 +56,10 @@ try
     app.UseSwaggerForOcelotUI(opt =>
     {
         opt.PathToSwaggerGenerator = "/swagger/docs";
+        opt.OAuthClientId("tedu_microservices_swagger");
+        opt.DisplayRequestDuration();
     });
-    await app.UseOcelot(); // can move top?
+    await app.UseOcelot();
     app.Run();
 }
 catch (Exception ex)
