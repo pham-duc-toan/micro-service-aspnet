@@ -25,10 +25,11 @@ public class InventoryController : ControllerBase
 
     [Route("items/{itemNo}/paging", Name = "GetAllByItemNoPaging")]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<InventoryEntryDto>>> GetAllByItemNoPaging(string itemNo, GetInventoryPagingQuery query)
+    public async Task<ActionResult<IEnumerable<InventoryEntryDto>>> GetAllByItemNoPaging(string itemNo, [FromQuery] GetInventoryPagingQuery query)
     {
-
-        return Ok();
+        query.SetItemNo(itemNo);
+        var result = await _inventoryService.GetAllByItemNoPagingAsync(query);
+        return Ok(result);
     }
 
     [HttpPost("purchase/{itemNo}", Name = "PurchaseOrder")]
