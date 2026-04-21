@@ -1,3 +1,4 @@
+using Infrastructure.Middlewares;
 using Ocelot.Middleware;
 using OcelotApiGw.Extensions;
 using Serilog;
@@ -13,6 +14,7 @@ Log.Information($"Start {builder.Environment.ApplicationName} up");
 try
 {
     builder.Host.AddAppConfigurations();
+    builder.Services.AddConfigurationSettings(builder.Configuration);
     // Add services to the container.
 
     builder.Services.AddControllers();
@@ -34,13 +36,11 @@ try
 
     app.UseCors("CorsPolicy");
 
-    //app.UseMiddleware<ErrorWrappingMiddleware>();
-
-    //app.UseHttpsRedirection();
-
-    app.UseAuthorization();
-
+    app.UseMiddleware<ErrorWrappingMiddleware>();
+    app.UseAuthentication();
     app.UseRouting();
+    //app.UseHttpsRedirection();
+    app.UseAuthorization();
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapGet("/", async context =>

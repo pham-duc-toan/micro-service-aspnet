@@ -1,24 +1,24 @@
-﻿namespace Product.API.Extensions;
+﻿using Infrastructure.Middlewares;
 
-public static class ApplicationExtensions
+namespace Product.API.Extensions
 {
-    public static void UseInfrastructure(this IApplicationBuilder app)
+    public static class ApplicationExtensions
     {
-        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
-
-        if (env.IsDevelopment())
+        public static void UseInfrastructure(this IApplicationBuilder app)
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseMiddleware<ErrorWrappingMiddleware>();
+            app.UseAuthentication();
+            app.UseRouting();
+            //app.UseHttpsRedirection(); // for production only
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapDefaultControllerRoute();
+            });
         }
-
-        app.UseRouting();
-        //app.UseHttpsRedirection();
-        app.UseAuthorization();
-
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-        });
     }
 }
