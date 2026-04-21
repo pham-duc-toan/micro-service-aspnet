@@ -4,10 +4,12 @@ using Basket.API.Repositories.Interfaces;
 using Basket.API.Services;
 using Basket.API.Services.Interfaces;
 using Contracts.Common.Interfaces;
+using Contracts.ScheduledJobs;
 using Contracts.Services;
 using EventBus.Messages;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
+using Infrastructure.ScheduleJobs;
 using Infrastructure.Services;
 using Inventory.Grpc.Protos;
 using MassTransit;
@@ -64,7 +66,9 @@ namespace Basket.API.Extensions
             services.AddScoped<IBasketRepository, BasketRepository>()
                     .AddTransient<ISerializerService, SerializerService>()
                     .AddScoped<IEmailTemplateService, EmailTemplateService>()
-                    .AddScoped<IBasketEmailService, BasketEmailService>();
+                    .AddScoped<IBasketEmailService, BasketEmailService>()
+                    .AddScoped<IHttpClientHelper, HttpClientHelper>()
+                    .AddScoped<IScheduledJobsClient, ScheduledJobClient>();
         }
 
         private static void ConfigureMassTransit(this IServiceCollection services)
