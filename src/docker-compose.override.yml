@@ -134,7 +134,7 @@ services:
 #      retries: 5
 
   #microservices api section
-  #product.api:
+  # product.api:
   #  container_name: product.api
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
@@ -146,19 +146,20 @@ services:
   #    - "6002:80"
   #  restart: always
    
-  #customer.api:
+  # customer.api:
   #  container_name: customer.api
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
   #    - ASPNETCORE_URLS=http://+:80
   #    - "ConnectionStrings:DefaultConnectionString=Server=customerdb;Port=5432;Database=CustomerDb;User Id=admin;Password=admin1234"
+  #    - "HangFireSettings:Storage:ConnectionString=Server=customerdb;Port=5432;Database=CustomerDb;User Id=admin;Password=admin1234"
   #  depends_on:
   #    - customerdb
   #  ports:
   #    - "6003:80"
   #  restart: always
 
-  #basket.api:
+  # basket.api:
   #  container_name: basket.api
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
@@ -166,6 +167,8 @@ services:
   #    - "CacheSettings:ConnectionString=basketdb:6379"
   #    - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
   #    - "GrpcSettings:StockUrl=http://inventory.grpc"
+  #    - "UrlSettings:ApiGwUrl=http://apigw.ocelot"
+  #    - "UrlSettings:HangfireUrl=http://hangfire.api"
   #  depends_on:
   #    - basketdb
   #    - rabbitmq
@@ -173,7 +176,7 @@ services:
   #    - "6004:80"
   #  restart: always
 
-  #order.api:
+  # order.api:
   #  container_name: order.api
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
@@ -187,7 +190,7 @@ services:
   #    - "6005:80"
   #  restart: always
     
-  #inventory.product.api:
+  # inventory.product.api:
   #  container_name: inventory.product.api
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
@@ -200,7 +203,7 @@ services:
   #    - "6006:80"
   #  restart: always
 
-  #inventory.grpc:
+  # inventory.grpc:
   #  container_name: inventory.grpc
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Development
@@ -213,7 +216,7 @@ services:
   #    - "6007:80"
   #  restart: always
 
-  #apigw.ocelot:
+  # apigw.ocelot:
   #  container_name: apigw.ocelot
   #  environment:
   #    - ASPNETCORE_ENVIRONMENT=Local
@@ -227,5 +230,17 @@ services:
   #    - inventory.product.api
   #  ports:
   #    - "6001:80"
+  #  restart: always
+
+  # hangfire.api:
+  #  container_name: hangfire.api
+  #  environment:
+  #    - ASPNETCORE_ENVIRONMENT=Local
+  #    - ASPNETCORE_URLS=http://+:80
+  #    - "HangFireSettings:Storage:ConnectionString=mongodb://admin:admin@hangfiredb/hangfire-webapi?authSource=admin"
+  #  depends_on:
+  #    - hangfiredb
+  #  ports:
+  #    - "6008:80"
   #  restart: always
     
