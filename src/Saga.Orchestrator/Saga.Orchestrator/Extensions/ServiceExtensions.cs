@@ -1,7 +1,10 @@
-﻿using Saga.Orchestrator.HttpRepository;
+﻿using Contracts.Sagas.OrderManager;
+using Saga.Orchestrator.HttpRepository;
 using Saga.Orchestrator.HttpRepository.Interfaces;
+using Saga.Orchestrator.OrderManager;
 using Saga.Orchestrator.Services;
 using Saga.Orchestrator.Services.Interfaces;
+using Shared.DTOs.Basket;
 
 namespace Saga.Orchestrator.Extensions;
 
@@ -10,6 +13,7 @@ public static class ServiceExtensions
     public static void ConfigureServices(this IServiceCollection services)
     {
         services.AddTransient<ICheckoutService, CheckoutService>();
+        services.AddTransient<ISagaOrderManager<BasketCheckoutDto, OrderResponse>, SagaOrderManager>();
     }
 
     public static void ConfigureHttpRepository(this IServiceCollection services)
@@ -50,6 +54,6 @@ public static class ServiceExtensions
         {
             cl.BaseAddress = new Uri("http://localhost:5006/api/");
         });
-        services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("InventoryAPI"));
+        //services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("InventoryAPI"));
     }
 }
