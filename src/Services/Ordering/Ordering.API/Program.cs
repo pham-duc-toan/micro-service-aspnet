@@ -40,7 +40,7 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var orderContextSeed = scope.ServiceProvider.GetRequiredService<OrderContextSeed>();
-        await orderContextSeed.InitializeAsync();
+        await orderContextSeed.InitialiseAsync();
         await orderContextSeed.SeedAsync();
     }
 

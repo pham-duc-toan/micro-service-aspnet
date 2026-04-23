@@ -32,7 +32,7 @@ namespace Ordering.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
 
-                    b.Property<DateTimeOffset>("CreateDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DocumentNo")

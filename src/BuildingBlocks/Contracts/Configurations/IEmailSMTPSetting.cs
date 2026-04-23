@@ -1,6 +1,6 @@
 namespace Contracts.Configurations;
 
-public interface IEmailSMTPSettings
+public interface IEmailSMTPSetting
 {
     string DisplayName { get; set; }
     bool EnableVerification { get; set; }

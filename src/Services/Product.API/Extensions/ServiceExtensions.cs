@@ -1,6 +1,7 @@
 ﻿using Contracts.Common.Interfaces;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
+using Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -28,6 +29,7 @@ namespace Product.API.Extensions
             services.AddInfrastructrueService();
             services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
             services.AddJwtAuthentication();
+            services.ConfigureAuthorization();
             services.ConfigureHealthChecks();
         }
 

@@ -7,15 +7,15 @@ namespace Product.API.Repositories.Interfaces;
 public interface IProductRepository
     : IRepositoryBaseAsync<CatalogProduct, long, ProductContext>
 {
-  Task<IEnumerable<CatalogProduct>> GetProducts();
+  Task<IEnumerable<CatalogProduct>> GetProductsAsync();
 
-  Task<CatalogProduct> GetProduct(long id);
+  Task<CatalogProduct?> GetProductAsync(long id);
 
-  Task<CatalogProduct> GetProductByNo(string productNo);
+  Task<CatalogProduct?> GetProductByNoAsync(string productNo);
 
-  Task CreateProduct(CatalogProduct product);
+  Task CreateProductAsync(CatalogProduct product);
 
-  Task UpdateProduct(CatalogProduct product);
+  Task UpdateProductAsync(CatalogProduct product);
 
-  Task DeleteProduct(long id);
+  Task DeleteProductAsync(long id);
 }

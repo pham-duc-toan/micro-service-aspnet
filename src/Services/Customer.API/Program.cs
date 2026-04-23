@@ -20,7 +20,7 @@ try
 
     app.UseInfrastructure(builder.Configuration);
 
-    app.MapCustomersAPI();
+    app.MapCustomerEndpoints();
 
     app.SeedCustomerData().Run();
 }

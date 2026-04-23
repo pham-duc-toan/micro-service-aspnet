@@ -36,7 +36,7 @@ public class Order : AuditableEventEntity<long>
     [Column(TypeName = "nvarchar(max)")]
     public string InvoiceAddress { get; set; }
 
-    public EOrderStatus Status { get; set; }
+    public Shared.Enums.EOrderStatus Status { get; set; }
 
     [NotMapped]
     public string FullName => FirstName + " " + LastName;

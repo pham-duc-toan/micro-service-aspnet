@@ -12,6 +12,8 @@ COPY ["BuildingBlocks/Common.Logging/Common.Logging.csproj", "BuildingBlocks/Com
 COPY ["BuildingBlocks/Infrastructure/Infrastructure.csproj", "BuildingBlocks/Infrastructure/"]
 COPY ["BuildingBlocks/Contracts/Contracts.csproj", "BuildingBlocks/Contracts/"]
 COPY ["BuildingBlocks/EventBus/EventBus.MessageComponents/EventBus.MessageComponents.csproj", "BuildingBlocks/EventBus/EventBus.MessageComponents/"]
+COPY ["BuildingBlocks/EventBus/EventBus.Messages/EventBus.Messages.csproj", "BuildingBlocks/EventBus/EventBus.Messages/"]
+COPY ["BuildingBlocks/Shared/Shared.csproj", "BuildingBlocks/Shared/"]
 RUN dotnet restore "Services/Basket.API/Basket.API.csproj"
 COPY . .
 WORKDIR "Services/Basket.API"

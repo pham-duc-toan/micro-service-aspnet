@@ -15,25 +15,24 @@ public class ProductRepository
   {
   }
 
-  public async Task<IEnumerable<CatalogProduct>> GetProducts() =>
+  public async Task<IEnumerable<CatalogProduct>> GetProductsAsync() =>
       await FindAll().ToListAsync();
 
-  public async Task<CatalogProduct> GetProduct(long id) =>
-      await GetByIdAsync(id) ?? throw new KeyNotFoundException($"Product with id {id} was not found");
+  public async Task<CatalogProduct?> GetProductAsync(long id) =>
+    await GetByIdAsync(id);
 
-  public async Task<CatalogProduct> GetProductByNo(string productNo) =>
-      await FindByCondition(x => x.No.Equals(productNo)).SingleOrDefaultAsync()
-      ?? throw new KeyNotFoundException($"Product with no {productNo} was not found");
+  public async Task<CatalogProduct?> GetProductByNoAsync(string productNo) =>
+    await FindByCondition(x => x.No.Equals(productNo)).SingleOrDefaultAsync();
 
-  public async Task CreateProduct(CatalogProduct product)
+  public async Task CreateProductAsync(CatalogProduct product)
   {
     _ = await CreateAsync(product);
   }
 
-  public Task UpdateProduct(CatalogProduct product) =>
+  public Task UpdateProductAsync(CatalogProduct product) =>
       UpdateAsync(product);
 
-  public async Task DeleteProduct(long id)
+  public async Task DeleteProductAsync(long id)
   {
     var product = await GetByIdAsync(id);
     if (product is null)

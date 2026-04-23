@@ -29,7 +29,7 @@ public class CustomerRepositoryAsync
   public async Task<Entities.Customer> CreateCustomerAsync(Entities.Customer customer)
   {
     _ = await CreateAsync(customer);
-    _ = await SaveChangesAsync();
+    _ = await SaveChangeAsync();
     return customer;
   }
 
@@ -45,7 +45,7 @@ public class CustomerRepositoryAsync
     existingCustomer.EmailAddress = customer.EmailAddress;
 
     await UpdateAsync(existingCustomer);
-    _ = await SaveChangesAsync();
+    _ = await SaveChangeAsync();
     return true;
   }
 
@@ -56,7 +56,7 @@ public class CustomerRepositoryAsync
       return false;
 
     await DeleteAsync(existingCustomer);
-    _ = await SaveChangesAsync();
+    _ = await SaveChangeAsync();
     return true;
   }
 }

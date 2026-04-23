@@ -2,6 +2,6 @@
 
 public class SalesOrderDto
 {
-    public string OrderNo { get; set; }
+    public string? OrderNo { get; set; }
     public List<SaleItemDto> SaleItems { get; set; }
 }

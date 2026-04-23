@@ -61,7 +61,7 @@ public class OrderContext : DbContext
                 case EntityState.Added:
                     if (item.Entity is IDateTracking addedEntity)
                     {
-                        addedEntity.CreateDate = DateTime.UtcNow;
+                        addedEntity.CreatedDate = DateTime.UtcNow;
                         item.State = EntityState.Added;
                     }
                     break;

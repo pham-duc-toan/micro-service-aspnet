@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Shared.Configurations;
 using Shared.DTOs.Identity;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 namespace Infrastructure.Identity;
@@ -18,12 +19,12 @@ public class TokenService : ITokenService
 
     public TokenResponse GetToken(TokenRequest request)
     {
-        var token = GenerateJwt();
+        var token = GenerateJwt(request);
         var result = new TokenResponse(token);
         return result;
     }
 
-    private string GenerateJwt() => GenerateEncryptedToken(GetSigningCredential());
+    private string GenerateJwt(TokenRequest request) => GenerateEncryptedToken(GetSigningCredential(), request);
 
     private SigningCredentials GetSigningCredential()
     {
@@ -31,14 +32,15 @@ public class TokenService : ITokenService
         return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
     }
 
-    private string GenerateEncryptedToken(SigningCredentials signingCredentials)
+    private string GenerateEncryptedToken(SigningCredentials signingCredentials, TokenRequest request)
     {
-        //var claims = new[]
-        //{
-        //    new Claim("Role", "Admin")
-        //};
+        var role = string.IsNullOrWhiteSpace(request.Role) ? "Admin" : request.Role;
+        var claims = new[]
+        {
+            new Claim("Role", role)
+        };
         var token = new JwtSecurityToken(
-            //claims: claims,
+            claims: claims,
             expires: DateTime.Now.AddMinutes(30),
             signingCredentials: signingCredentials);
         var tokenHandler = new JwtSecurityTokenHandler();

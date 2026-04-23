@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Ordering.Application.Common.Mapping;
+using Ordering.Application.Common.Mappings;
 using Ordering.Domain.Entities;
 
 namespace Ordering.Application.Features.V1.Orders;

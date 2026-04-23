@@ -1,1 +1,5 @@
-{}
+{
+  "csharp-dev-tools.roslyn.projectOrSolutionFiles": [
+    "d:\\hoc hanh\\htpt\\Microservice-e0b9a33031d70eb92cc0c0b20e4fc78541350bd2\\btl_http\\aspnetcore-microservice.sln"
+  ]
+}

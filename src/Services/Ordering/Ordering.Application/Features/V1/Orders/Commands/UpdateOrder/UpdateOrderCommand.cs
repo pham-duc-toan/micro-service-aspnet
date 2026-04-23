@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Infrastructure.Extensions;
 using MediatR;
-using Ordering.Application.Common.Mapping;
+using Ordering.Application.Common.Mappings;
 using Ordering.Application.Common.Models;
 using Ordering.Domain.Entities;
 using Shared.SeedWork.ApiResult;

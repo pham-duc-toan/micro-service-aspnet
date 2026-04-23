@@ -1,4 +1,4 @@
-﻿using Ordering.Application.Common.Mapping;
+﻿using Ordering.Application.Common.Mappings;
 using Ordering.Domain.Entities;
 using Shared.Enums;
 

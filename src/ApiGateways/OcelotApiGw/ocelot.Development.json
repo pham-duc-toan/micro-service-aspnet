@@ -6,7 +6,7 @@
     // Product api: http://localhost:5002/api/products
     {
       "UpstreamPathTemplate": "/api/products",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": ["GET", "POST"],
       "DownstreamPathTemplate": "/api/products",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -30,15 +30,15 @@
       "FileCacheOptions": {
         "TtlSeconds": 15 //cached seconds
       },
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //},
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "SwaggerKey": "product-service"
     },
     {
       "UpstreamPathTemplate": "/api/products/{any}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/products/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -47,15 +47,15 @@
           "Port": 5002
         }
       ],
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //},
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "SwaggerKey": "product-service"
     },
     {
       "UpstreamPathTemplate": "/api/products/{any}",
-      "UpstreamHttpMethod": [ "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/products/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -64,20 +64,46 @@
           "Port": 5002
         }
       ],
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //},
-      //      "RouteClaimsRequirement": {
-      //        "Role": "Admin"
-      //      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "Admin"
+      },
       "SwaggerKey": "product-service"
     },
     // Customer api: http://localhost:5003/api/customers
     {
-      "UpstreamPathTemplate": "/api/customers/{username}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/customers/{username}",
+      "UpstreamPathTemplate": "/api/customers",
+      "UpstreamHttpMethod": ["GET", "POST"],
+      "DownstreamPathTemplate": "/api/customers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "SwaggerKey": "customer-service"
+    },
+    {
+      "UpstreamPathTemplate": "/api/customers/{id}",
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "DownstreamPathTemplate": "/api/customers/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "SwaggerKey": "customer-service"
+    },
+    {
+      "UpstreamPathTemplate": "/api/customers/username/{username}",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/customers/username/{username}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -90,7 +116,7 @@
     // Basket api: http://localhost:5004/api/baskets
     {
       "UpstreamPathTemplate": "/api/baskets",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/baskets",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -103,7 +129,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/baskets/{username}",
-      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "DELETE"],
       "DownstreamPathTemplate": "/api/baskets/{username}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -116,7 +142,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/baskets/checkout",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/baskets/checkout",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -130,7 +156,7 @@
     // Order api: http://localhost:5005/api/{version}/orders
     {
       "UpstreamPathTemplate": "/api/{version}/orders/{any}",
-      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/{version}/orders/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -143,7 +169,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/{version}/orders",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/{version}/orders",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -157,7 +183,7 @@
     // Inventory API : http://localhost:5006/inventory
     {
       "UpstreamPathTemplate": "/api/inventory/items/{any}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/api/inventory/items/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -170,7 +196,7 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/purchase/{any}",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/inventory/purchase/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -182,8 +208,34 @@
       "SwaggerKey": "inventory-service"
     },
     {
+      "UpstreamPathTemplate": "/api/inventory/sales/{itemNo}",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/inventory/sales/{itemNo}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5006
+        }
+      ],
+      "SwaggerKey": "inventory-service"
+    },
+    {
+      "UpstreamPathTemplate": "/api/inventory/sales/order-no/{orderNo}",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/inventory/sales/order-no/{orderNo}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5006
+        }
+      ],
+      "SwaggerKey": "inventory-service"
+    },
+    {
       "UpstreamPathTemplate": "/api/inventory/{any}",
-      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "UpstreamHttpMethod": ["GET", "DELETE"],
       "DownstreamPathTemplate": "/api/inventory/{any}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

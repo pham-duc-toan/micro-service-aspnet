@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Ordering.Application.Common.Models;
 using Ordering.Application.Features.V1.Orders;
+using Ordering.Application.Features.V1.Orders.Queries.GetOrders;
 using Shared.SeedWork.ApiResult;
 using System.Net;
 
@@ -30,7 +31,7 @@ public class OrdersController : ControllerBase
     [HttpGet("{userName}", Name = RouteNames.GetOrders)]
     public async Task<ActionResult<ApiResult<List<OrderDto>>>> GetOrdersByUserName(string userName)
     {
-        var query = new GetOrderQuery(userName);
+        var query = new GetOrdersQuery(userName);
         var result = await _mediator.Send(query);
         return Ok(result);
     }

@@ -18,9 +18,9 @@ public class TokenController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult GetToken()
+    public IActionResult GetToken([FromQuery] string role = "Admin")
     {
-        var result = _tokenService.GetToken(new TokenRequest());
+        var result = _tokenService.GetToken(new TokenRequest(role));
         return Ok(result);
     }
 }

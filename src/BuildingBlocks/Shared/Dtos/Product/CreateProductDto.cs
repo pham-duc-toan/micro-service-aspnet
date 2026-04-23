@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Dtos.Product;
+namespace Shared.DTOs.Product;
 
 public class CreateProductDto : ProductUpsertDto
 {
