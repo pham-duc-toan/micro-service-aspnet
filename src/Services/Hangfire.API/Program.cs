@@ -14,10 +14,10 @@ Log.Information($"Start {builder.Environment.ApplicationName} up");
 try
 {
     // Add services to the container.
+    builder.Host.AddAppConfigurations();
     builder.Services.AddConfigurationSettings(builder.Configuration);
     builder.Services.AddHangfireService();
     builder.Services.ConfigureServices();
-    builder.Host.AddAppConfigurations();
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
@@ -36,14 +36,10 @@ try
     app.UseHttpsRedirection();
 
     app.UseAuthorization();
-    
-    app.UseHangfireDashboard(builder.Configuration);
 
-    app.UseEndpoints(e =>
-    {
-        e.MapDefaultControllerRoute();
-    });
-    
+    app.UseHangfireDashboard(builder.Configuration);
+    app.MapControllers();
+
     app.Run();
 }
 catch (Exception ex)
