@@ -1,16 +1,13 @@
-
 using Common.Logging;
 using Serilog;
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
-Log.Information("Starting Ordering API up");
+var builder = WebApplication.CreateBuilder(args);
+
+Log.Information("Ordering API is starting up");
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
-
     builder.Host.UseSerilog(Serilogger.Configure);
-    // Add services to the container.
 
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -34,13 +31,12 @@ try
 
     app.Run();
 }
-catch (Exception ex)
+catch (Exception e)
 {
-    Log.Fatal(ex, "Unhandlerd exception");
+    Log.Fatal("Ordering API failed to start up");
 }
 finally
 {
-    Log.Information("Shut down Ordering API complete");
+    Log.Information("Ordering API is shutting down");
     Log.CloseAndFlush();
 }
-

@@ -33,18 +33,24 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.2
 
-  # microservices api sections
+  #microservices api section
   product.api:
     image: ${DOCKER_REGISTRY-}product-api:${PLATFORM:-linux}-${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Services/Product.API/Dockerfile
 
   customer.api:
     image: ${DOCKER_REGISTRY-}customer-api:${PLATFORM:-linux}-${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Services/Customer.API/Dockerfile
 
   basket.api:
     image: ${DOCKER_REGISTRY-}basket-api:${PLATFORM:-linux}-${TAG:-latest}
     build:
       context: .
-      dockerfile: Services/Basket.API/Basket.API/Dockerfile
+      dockerfile: Services/Basket.API/Dockerfile
 
 #network section
 networks:
@@ -52,7 +58,7 @@ networks:
     name: tedu_microservices
     driver: bridge
 
-#vollumes section
+#volumes section
 volumes:
   sqlserver_data:
     name: sqlserver_data

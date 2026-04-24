@@ -1,9 +1,9 @@
-using AutoMapper;
-using Product.API.Entities;
-using Microsoft.AspNetCore.Mvc;
-using Product.API.Repositories.Interfaces;
-using Shared.Dtos.Product;
 using System.ComponentModel.DataAnnotations;
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Product.API.Entities;
+using Product.API.Repositories.Interfaces;
+using Shared.DTOs;
 
 namespace Product.API.Controllers;
 
@@ -11,97 +11,99 @@ namespace Product.API.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-  private readonly IProductRepository _productRepository;
-  private readonly IMapper _mapper;
+    private readonly IProductRepository _repository;
+    private readonly IMapper _mapper;
 
-  public ProductsController(IProductRepository productRepository, IMapper mapper)
-  {
-    _productRepository = productRepository;
-    _mapper = mapper;
-  }
-
-  [HttpGet]
-  public async Task<IActionResult> GetProducts()
-  {
-    var products = await _productRepository.GetProducts();
-    var result = _mapper.Map<IEnumerable<ProductDto>>(products);
-    return Ok(result);
-  }
-
-  [HttpGet("{id:long}")]
-  public async Task<IActionResult> GetProduct([Required] long id)
-  {
-    try
+    public ProductsController(IProductRepository repository, IMapper mapper)
     {
-      var product = await _productRepository.GetProduct(id);
-      var result = _mapper.Map<ProductDto>(product);
-      return Ok(result);
+        _repository = repository;
+        _mapper = mapper;
     }
-    catch (KeyNotFoundException ex)
+
+    #region CRUD
+    [HttpGet]
+    public async Task<IActionResult> GetProducts()
     {
-      return NotFound(new { message = ex.Message });
+        var products = await _repository.GetProducts();
+        var result = _mapper.Map<IEnumerable<ProductDto>>(products);
+        return Ok(result);
     }
-  }
 
-  [HttpGet("by-no/{productNo}")]
-  public async Task<IActionResult> GetProductByNo([Required] string productNo)
-  {
-    try
+    [HttpGet("{id:long}")]
+    public async Task<IActionResult> GetProduct([Required] long id)
     {
-      var product = await _productRepository.GetProductByNo(productNo);
-      var result = _mapper.Map<ProductDto>(product);
-      return Ok(result);
+        var product = await _repository.GetProduct(id);
+
+        if (product == null)
+            return NotFound();
+
+        var result = _mapper.Map<ProductDto>(product);
+        return Ok(result);
     }
-    catch (KeyNotFoundException ex)
+
+    [HttpPost]
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto productDto)
     {
-      return NotFound(new { message = ex.Message });
+        var productEntity = await _repository.GetProductByNo(productDto.No);
+        if (productEntity != null) return BadRequest($"Product No: {productDto.No} is existed.");
+
+        var product = _mapper.Map<CatalogProduct>(productDto);
+
+        await _repository.CreateProduct(product);
+        await _repository.SaveChangesAsync();
+
+        var result = _mapper.Map<ProductDto>(product);
+
+        return Ok(result);
     }
-  }
 
-  [HttpPost]
-  public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto request)
-  {
-    var product = _mapper.Map<CatalogProduct>(request);
-
-    await _productRepository.CreateProduct(product);
-    await _productRepository.SaveChangesAsync();
-
-    var result = _mapper.Map<ProductDto>(product);
-    return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, result);
-  }
-
-  [HttpPut("{id:long}")]
-  public async Task<IActionResult> UpdateProduct([Required] long id, [FromBody] UpdateProductDto request)
-  {
-    try
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> UpdateProduct([Required] long id, [FromBody] UpdateProductDto productDto)
     {
-      var existingProduct = await _productRepository.GetProduct(id);
-      _mapper.Map(request, existingProduct);
+        var product = await _repository.GetProduct(id);
 
-      await _productRepository.UpdateProduct(existingProduct);
-      await _productRepository.SaveChangesAsync();
+        if (product == null)
+            return NotFound();
 
-      return NoContent();
+        var updateProduct = _mapper.Map(productDto, product);
+
+        await _repository.UpdateProduct(updateProduct);
+        await _repository.SaveChangesAsync();
+
+        var result = _mapper.Map<ProductDto>(product);
+
+        return Ok(result);
     }
-    catch (KeyNotFoundException ex)
+
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> DeleteProduct([Required] long id)
     {
-      return NotFound(new { message = ex.Message });
-    }
-  }
+        var product = await _repository.GetProduct(id);
 
-  [HttpDelete("{id:long}")]
-  public async Task<IActionResult> DeleteProduct([Required] long id)
-  {
-    try
-    {
-      await _productRepository.DeleteProduct(id);
-      await _productRepository.SaveChangesAsync();
+        if (product == null)
+            return NotFound();
 
-      return NoContent();
+        await _repository.DeleteProduct(id);
+        await _repository.SaveChangesAsync();
+
+        return NoContent();
     }
-    catch (KeyNotFoundException ex)
+
+    #endregion
+
+    #region Additional Resources
+
+    [HttpGet("get-product-by-no/{productNo}")]
+    public async Task<IActionResult> GetProductByNo([Required] string productNo)
     {
-      return NotFound(new { message = ex.Message });
+        var product = await _repository.GetProductByNo(productNo);
+        if (product == null)
+            return NotFound();
+
+        var result = _mapper.Map<ProductDto>(product);
+        return Ok(result);
     }
-  }
+
+    #endregion
+
 }
