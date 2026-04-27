@@ -89,6 +89,9 @@ public static class ServiceExtensions
     
     public static void ConfigureHttpClientService(this IServiceCollection services)
     {
-        services.AddHttpClient<BackgroundJobHttpService>().AddHttpMessageHandler<LoggingDelegatingHandler>();
+        services.AddHttpClient<BackgroundJobHttpService>()
+            .AddHttpMessageHandler<LoggingDelegatingHandler>()
+            .UseImmediateHttpRetryPolicy()
+            .UseCircuitHttpRetryPolicy();
     }
 }

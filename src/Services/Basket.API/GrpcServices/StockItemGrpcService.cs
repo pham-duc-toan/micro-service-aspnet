@@ -20,8 +20,8 @@ public class StockItemGrpcService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            Console.WriteLine("Errorrrrrrrrrrrrrr");
+            return new StockModel();
         }
     }
 }
