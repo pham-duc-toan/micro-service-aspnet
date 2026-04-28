@@ -15,13 +15,14 @@ public class LoggingDelegatingHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        HttpResponseMessage? response = null;
         try
         {
             _logger.LogInformation($"Sending request to {request.RequestUri}" +
                                    $"- Method: {request.Method}" +
                                    $"- Version: {request.Version}");
 
-            var response = await base.SendAsync(request, cancellationToken);
+            response = await base.SendAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation($"Received a success response from {response.RequestMessage.RequestUri}");
@@ -32,15 +33,15 @@ public class LoggingDelegatingHandler : DelegatingHandler
             }
         }
         catch (HttpRequestException e)
-        when(e.InnerException is SocketException{SocketErrorCode: SocketError.ConnectionRefused})
+        when (e.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused })
         {
             var hostWithPort = request.RequestUri.IsDefaultPort
                 ? request.RequestUri.DnsSafeHost
                 : $"{request.RequestUri.DnsSafeHost}:{request.RequestUri.Port}";
-            
+
             _logger.LogCritical($"Unable to connect the host {e}", e);
         }
 
-        return new HttpResponseMessage(HttpStatusCode.BadGateway);
+        return response ?? new HttpResponseMessage(HttpStatusCode.BadGateway);
     }
 }

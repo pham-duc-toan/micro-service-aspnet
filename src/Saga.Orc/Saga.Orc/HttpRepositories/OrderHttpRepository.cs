@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Extensions;
 using Saga.Orc.HttpRepositories.Interfaces;
 using Shared.DTOs.Order;
+using Shared.SeedWork;
 
 namespace Saga.Orc.HttpRepositories;
 
@@ -17,15 +18,14 @@ public class OrderHttpRepository : IOrderHttpRepository
     {
         var response = await _httpClient.PostAsJsonAsync("orders", request);
         if (!response.EnsureSuccessStatusCode().IsSuccessStatusCode) return -1;
-        
-        var id = await response.ReadContentAs<long>();
-         
-        return id;
+
+        var result = await response.ReadContentAs<ApiResult<long>>();
+        return result.Data;
     }
 
     public async Task<OrderDto> GetOrderById(long orderId)
     {
-        var response = await _httpClient.GetFromJsonAsync<OrderDto>($"orders/{orderId.ToString()}");
+        var response = await _httpClient.GetFromJsonAsync<OrderDto>($"orders/by-id/{orderId.ToString()}");
         return response;
     }
 

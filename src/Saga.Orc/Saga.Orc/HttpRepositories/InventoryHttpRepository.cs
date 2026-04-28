@@ -40,11 +40,11 @@ public class InventoryHttpRepository : IInventoryHttpRepository
     public async Task<bool> DeleteOrderByDocumentNo(string documentNo)
     {
         var response = await _httpClient.DeleteAsync($"inventory/document-no/{documentNo}");
-        if (!response.EnsureSuccessStatusCode().IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            throw new Exception($"Delete failed" + documentNo);
+            return true;
         }
 
-        return true;
+        throw new Exception($"Delete failed" + documentNo);
     }
 }

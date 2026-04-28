@@ -24,10 +24,7 @@ public class BasketHttpRepository : IBasketHttpRepository
 
     public async Task<bool> DeleteBasket(string username)
     {
-        var http =  _httpClientFactory.CreateClient($"baskets/{username}");
-        var cart = await http.GetFromJsonAsync<CartDto>($"baskets/{username}");
-        if (cart == null || !cart.Items.Any()) return false;
-
-        return true;
+        var response = await _httpClient.DeleteAsync($"baskets/{username}");
+        return response.IsSuccessStatusCode;
     }
 }

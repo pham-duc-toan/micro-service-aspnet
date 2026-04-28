@@ -36,11 +36,11 @@ public static class ServiceExtensions
     {
         services.AddHttpClient<IOrderHttpRepository, OrderHttpRepository>("OrdersAPI", (provider, client) =>
         {
-            client.BaseAddress = new Uri("http://localhost:5006/api/v1/");
+            client.BaseAddress = new Uri("http://localhost:5005/api/v1/");
         }).AddHttpMessageHandler<LoggingDelegatingHandler>();
         services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("OrdersAPI"));
     }
-    
+
     private static void ConfigureBasketHttp(this IServiceCollection services)
     {
         services.AddHttpClient<IBasketHttpRepository, BasketHttpRepository>("BasketsAPI", (provider, client) =>
@@ -49,7 +49,7 @@ public static class ServiceExtensions
         }).AddHttpMessageHandler<LoggingDelegatingHandler>();
         services.AddScoped(sp => sp.GetService<IHttpClientFactory>().CreateClient("BasketsAPI"));
     }
-    
+
     private static void ConfigureInventoryHttp(this IServiceCollection services)
     {
         services.AddHttpClient<IInventoryHttpRepository, InventoryHttpRepository>("InventoryAPI", (provider, client) =>

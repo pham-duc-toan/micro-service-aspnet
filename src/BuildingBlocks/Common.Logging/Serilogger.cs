@@ -20,19 +20,35 @@ public static class Serilogger
                 .WriteTo.Debug()
                 .WriteTo.Console(outputTemplate:
                     "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
-                .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithProperty("Environment", environmentName)
+                .Enrich.WithProperty("Application", applicationName)
+                .ReadFrom.Configuration(context.Configuration);
+
+            if (Uri.TryCreate(elasticUri, UriKind.Absolute, out var elasticSearchUri))
+            {
+                configuration.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(elasticSearchUri)
                 {
                     //logs-basket-dev-2025-03
                     IndexFormat = $"dat-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
                     AutoRegisterTemplate = true,
                     NumberOfReplicas = 1,
                     NumberOfShards = 2,
-                    ModifyConnectionSettings = x => x.BasicAuthentication(username, password),
-                })
-                .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .Enrich.WithProperty("Environment", environmentName)
-                .Enrich.WithProperty("Application", applicationName)
-                .ReadFrom.Configuration(context.Configuration);
+                    ModifyConnectionSettings = x =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+                        {
+                            x = x.BasicAuthentication(username, password);
+                        }
+
+                        return x;
+                    },
+                });
+            }
+            else
+            {
+                Log.Warning("ElasticConfiguration:Uri is not configured. Elasticsearch sink will be disabled.");
+            }
         };
 }

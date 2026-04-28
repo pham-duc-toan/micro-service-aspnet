@@ -59,6 +59,7 @@ catch (Exception ex)
     if (type.Equals("StopTheHostException", StringComparison.Ordinal)) throw;
 
     Log.Fatal(ex, $"Unhandled exception: {ex.Message}");
+    Console.WriteLine(ex);
 }
 finally
 {
