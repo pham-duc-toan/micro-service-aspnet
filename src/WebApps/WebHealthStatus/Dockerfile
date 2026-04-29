@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 as base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0 as base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 as build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 as build
 WORKDIR /src
-COPY ["WebApps\WebHealthStatus\WebHealthStatus.csproj", "WebApps/WebHealthStatus"]
-RUN dotnet restore "WebApps\WebHealthStatus\WebHealthStatus.csproj"
+COPY ["WebApps/WebHealthStatus/WebHealthStatus.csproj", "WebApps/WebHealthStatus/"]
+RUN dotnet restore "WebApps/WebHealthStatus/WebHealthStatus.csproj"
 COPY . .
 WORKDIR "/src/WebApps/WebHealthStatus"
 RUN dotnet build "WebHealthStatus.csproj" -c Release -o /app/build

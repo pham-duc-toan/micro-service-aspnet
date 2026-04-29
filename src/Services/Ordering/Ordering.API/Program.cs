@@ -1,5 +1,7 @@
 using Common.Logging;
+using HealthChecks.UI.Client;
 using Infrastructure.Middlewares;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Ordering.API.Extensions;
 using Ordering.Application;
 using Ordering.Infrastructure;
@@ -27,7 +29,7 @@ try
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -48,15 +50,22 @@ try
     }
 
     app.UseMiddleware<ErrorWrappingMiddleware>();
-    
+
     // app.UseHttpsRedirection(); //production only
     app.UseRouting();
 
     app.UseAuthorization();
 
-    app.MapControllers();
-
-    app.MapDefaultControllerRoute();
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+        endpoints.MapControllers();
+        endpoints.MapDefaultControllerRoute();
+    });
 
     app.Run();
 }

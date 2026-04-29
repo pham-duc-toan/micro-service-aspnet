@@ -1,9 +1,6 @@
-using System.Text;
 using Contracts.Domains.Interfaces;
-using Contracts.Identity;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
-using Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -15,6 +12,7 @@ using Product.API.Persistence;
 using Product.API.Repositories;
 using Product.API.Repositories.Interfaces;
 using Shared.Configurations;
+using System.Text;
 
 namespace Product.API.Extensions;
 
@@ -31,6 +29,10 @@ public static class ServiceExtensions
             .Get<ApiConfigSetting>();
         services.AddSingleton(apiConfigSetting ?? new ApiConfigSetting());
 
+        var databaseSettings = configuration.GetSection(nameof(DatabaseSettings))
+            .Get<DatabaseSettings>();
+        services.AddSingleton(databaseSettings);
+
         return services;
     }
 
@@ -38,13 +40,13 @@ public static class ServiceExtensions
     {
         services.AddControllers();
         services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
-        services.AddHealthChecks();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.ConfigureProductDbContext(configuration);
         services.AddInfrastructureServices();
         services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
+        services.ConfigureHealthChecks();
         // services.AddJwtAuthentication();
 
         return services;
@@ -84,7 +86,7 @@ public static class ServiceExtensions
 
     private static IServiceCollection ConfigureProductDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var databaseSettings = configuration.GetSection(nameof(DatabaseSettings)).Get<DatabaseSettings>();
+        var databaseSettings = services.GetOptions<DatabaseSettings>(nameof(DatabaseSettings));
         if (databaseSettings == null || string.IsNullOrEmpty(databaseSettings.ConnectionString))
             throw new ArgumentNullException("Connection string is not configured.");
 
@@ -105,6 +107,15 @@ public static class ServiceExtensions
                 .AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>))
                 .AddScoped<IProductRepository, ProductRepository>()
             ;
+    }
+
+    private static void ConfigureHealthChecks(this IServiceCollection services)
+    {
+        var databaseSettings = services.GetOptions<DatabaseSettings>(nameof(DatabaseSettings));
+        services.AddHealthChecks()
+            .AddMySql(databaseSettings.ConnectionString,
+                name: "MySql Health",
+                HealthStatus.Degraded);
     }
 
     public static void ConfigSwagger(this IServiceCollection service, IConfiguration configuration)

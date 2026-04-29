@@ -1,7 +1,8 @@
 using Basket.API;
 using Basket.API.Extensions;
-using Common.Logging;
+using HealthChecks.UI.Client;
 using Infrastructure.Middlewares;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -18,14 +19,14 @@ try
     builder.Services.ConfigureHttpClientService();
     builder.Host.AddAppConfigurations();
     builder.Services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
-    
+
     // Add services to the container.
     builder.Services.ConfigureServices();
     builder.Services.ConfigureRedis();
     builder.Services.ConfigureGrpcService();
-    builder.Services.Configure<RouteOptions>(options 
+    builder.Services.Configure<RouteOptions>(options
         => options.LowercaseUrls = true);
-    
+
     // configure Mass Transit
     builder.Services.ConfigureMassTransit();
 
@@ -35,7 +36,7 @@ try
     builder.Services.AddSwaggerGen();
 
     var app = builder.Build();
-    
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
@@ -47,9 +48,18 @@ try
     app.UseMiddleware<ErrorWrappingMiddleware>();
     // app.UseHttpsRedirection();
 
+    app.UseRouting();
     app.UseAuthorization();
 
-    app.MapDefaultControllerRoute();
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+        endpoints.MapDefaultControllerRoute();
+    });
 
     app.Run();
 }

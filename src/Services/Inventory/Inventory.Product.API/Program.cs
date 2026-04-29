@@ -1,5 +1,7 @@
 using Common.Logging;
+using HealthChecks.UI.Client;
 using Inventory.Product.API.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,9 +32,18 @@ try
 
     // app.UseHttpsRedirection();
 
+    app.UseRouting();
     app.UseAuthorization();
 
-    app.MapDefaultControllerRoute();
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+        endpoints.MapDefaultControllerRoute();
+    });
 
     app.MigrateDatabase()
         .Run();

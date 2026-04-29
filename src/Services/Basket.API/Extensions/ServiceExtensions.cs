@@ -12,6 +12,7 @@ using Infrastructure.Policies;
 using Inventory.Grpc.Client;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Shared.Configurations;
 
 namespace Basket.API.Extensions;
@@ -28,6 +29,8 @@ public static class ServiceExtensions
         var cacheSettings = configuration.GetSection(nameof(CacheSettings))
             .Get<CacheSettings>();
         services.AddSingleton(cacheSettings);
+
+        services.ConfigureHealthChecks();
 
         var grpcSettings = configuration.GetSection(nameof(GrpcSettings))
             .Get<GrpcSettings>();
@@ -95,5 +98,17 @@ public static class ServiceExtensions
             .UseImmediateHttpRetryPolicy()
             .UseCircuitHttpRetryPolicy()
             .ConfigureTimeoutPolicy();
+    }
+
+    private static void ConfigureHealthChecks(this IServiceCollection services)
+    {
+        var cacheSettings = services.GetOptions<CacheSettings>(nameof(CacheSettings));
+        if (cacheSettings == null || string.IsNullOrEmpty(cacheSettings.ConnectionString))
+            throw new ArgumentNullException("Redis Connection string is not configured.");
+
+        services.AddHealthChecks()
+            .AddRedis(cacheSettings.ConnectionString,
+                name: "Redis Health",
+                failureStatus: HealthStatus.Degraded);
     }
 }

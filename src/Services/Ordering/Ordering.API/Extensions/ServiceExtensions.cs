@@ -2,6 +2,7 @@ using EventBus.Messages.IntegrationEvents.Events;
 using Infrastructure.Configurations;
 using Infrastructure.Extensions;
 using MassTransit;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ordering.API.Application.IntegrationEvents.EventsHandler;
 using Shared.Configurations;
@@ -16,7 +17,7 @@ public static class ServiceExtensions
         var emailSettings = configuration.GetSection(nameof(SMTPEmailSetting))
             .Get<SMTPEmailSetting>();
         services.AddSingleton(emailSettings);
-        
+
         var databaseSettings = configuration.GetSection(nameof(DatabaseSettings))
             .Get<DatabaseSettings>();
         services.AddSingleton(databaseSettings);
@@ -24,6 +25,8 @@ public static class ServiceExtensions
         var eventBusSettings = configuration.GetSection(nameof(EventBusSettings))
             .Get<EventBusSettings>();
         services.AddSingleton(eventBusSettings);
+
+        services.ConfigureHealthChecks();
 
         return services;
     }
@@ -33,7 +36,7 @@ public static class ServiceExtensions
         var settings = services.GetOptions<EventBusSettings>("EventBusSettings");
         if (settings == null || string.IsNullOrEmpty(settings.HostAddress))
             throw new ArgumentNullException("EventBusSetting is not configured");
-        
+
         var mqConnection = new Uri(settings.HostAddress);
         services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
         services.AddMassTransit(config =>
@@ -46,9 +49,21 @@ public static class ServiceExtensions
                 // {
                 //     c.ConfigureConsumer<BasketCheckoutEventHandler>(ctx);
                 // });
-                
+
                 cfg.ConfigureEndpoints(ctx);
             });
         });
+    }
+
+    private static void ConfigureHealthChecks(this IServiceCollection services)
+    {
+        var databaseSettings = services.GetOptions<DatabaseSettings>(nameof(DatabaseSettings));
+        if (databaseSettings == null || string.IsNullOrEmpty(databaseSettings.ConnectionString))
+            throw new ArgumentNullException("Connection string is not configured.");
+
+        services.AddHealthChecks()
+            .AddSqlServer(databaseSettings.ConnectionString,
+                name: "SqlServer Health",
+                failureStatus: HealthStatus.Degraded);
     }
 }
