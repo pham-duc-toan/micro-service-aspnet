@@ -31,7 +31,7 @@ public static class Serilogger
                 configuration.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(elasticSearchUri)
                 {
                     //logs-basket-dev-2025-03
-                    IndexFormat = $"dat-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
+                    IndexFormat = $"logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
                     AutoRegisterTemplate = true,
                     NumberOfReplicas = 1,
                     NumberOfShards = 2,
