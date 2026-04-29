@@ -1,27 +1,47 @@
 namespace Basket.API.GrpcServices;
 
+using Grpc.Core;
 using Inventory.Grpc.Client;
+using Polly;
+using Polly.Retry;
 
 public class StockItemGrpcService
 {
     private readonly StockProtoService.StockProtoServiceClient _stockProtoService;
-    
-    public StockItemGrpcService(StockProtoService.StockProtoServiceClient stockProtoService)
+    private readonly ILogger _logger;
+    private readonly AsyncRetryPolicy<StockModel> _retryPolicy;
+
+    public StockItemGrpcService(StockProtoService.StockProtoServiceClient stockProtoService, ILogger logger)
     {
         _stockProtoService = stockProtoService ?? throw new ArgumentNullException(nameof(stockProtoService));
+        _logger = _logger ?? throw new ArgumentNullException(nameof(logger));
+        _retryPolicy = Policy<StockModel>
+            .Handle<RpcException>()
+            .RetryAsync(3);
     }
     
     public async Task<StockModel> GetStock(string itemNo)
     {
         try
         {
+            _logger.LogInformation("Getting stock for item: {ItemNo}", itemNo);
             var stockItemRequest = new GetStockRequest { ItemNo = itemNo };
-            return await _stockProtoService.GetStockAsync(stockItemRequest);
+            return await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var result = await _stockProtoService.GetStockAsync(stockItemRequest);
+                if(result!=null)
+                _logger.LogInformation("Getting stock for item: {ItemNo}", itemNo);
+                return result;
+            });
+            
         }
-        catch (Exception e)
+        catch (RpcException e)
         {
+            _logger.LogError(e, "Error getting stock for item: {ItemNo}", itemNo);
             Console.WriteLine("Errorrrrrrrrrrrrrr");
-            return new StockModel();
+            return new StockModel { 
+            Quantity=-1
+            };
         }
     }
 }
