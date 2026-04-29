@@ -15,7 +15,7 @@ public static class Serilogger
             var elasticUri = context.Configuration.GetValue<string>("ElasticConfiguration:Uri");
             var username = context.Configuration.GetValue<string>("ElasticConfiguration:Username");
             var password = context.Configuration.GetValue<string>("ElasticConfiguration:Password");
-            
+
             configuration
                 .WriteTo.Debug()
                 .WriteTo.Console(outputTemplate:
@@ -30,8 +30,8 @@ public static class Serilogger
             {
                 configuration.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(elasticSearchUri)
                 {
-                    //logs-basket-dev-2025-03
-                    IndexFormat = $"logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
+                    //app-logs-basket-dev-2025-03
+                    IndexFormat = $"app-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
                     AutoRegisterTemplate = true,
                     NumberOfReplicas = 1,
                     NumberOfShards = 2,

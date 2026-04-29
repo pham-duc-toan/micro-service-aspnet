@@ -129,9 +129,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - "DatabaseSettings:ConnectionString=Server=productdb;Port=3306;Database=ProductDb;Uid=root;Pwd=Passw0rd!"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on: 
       - productdb
     ports:
@@ -144,9 +144,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - "DatabaseSettings:ConnectionString=Server=customerdb;Port=5432;Database=CustomerDb;User Id=admin;Password=admin1234"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on: 
       - customerdb
     ports:
@@ -163,9 +163,9 @@ services:
       - "GrpcSettings:StockUrl=http://inventory.grpc"
       - "BackgroundJobSettings:HangfireUrl=http://hangfire.api"
       - "BackgroundJobSettings:CheckoutUrl=http://localhost:6001"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on: 
       - basketdb
       - rabbitmq
@@ -180,9 +180,9 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - "DatabaseSettings:ConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=Passw0rd!;Multipleactiveresultsets=true"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on:
       - orderdb
       - rabbitmq
@@ -197,9 +197,9 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - "MongoDbSettings:ConnectionString=mongodb://inventorydb"
       - "MongoDbSettings:DatabaseName=InventoryDb"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on:
       - inventorydb
     ports:
@@ -213,9 +213,9 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - "MongoDbSettings:ConnectionString=mongodb://inventorydb"
       - "MongoDbSettings:DatabaseName=InventoryDb"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on:
       - inventorydb
     ports:
@@ -228,9 +228,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Local
       - ASPNETCORE_URLS=http://+:80
       - GlobalConfiguration:BaseUrl=http://apigw.ocelot
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on:
       - customer.api
       - basket.api
@@ -247,9 +247,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - "HangFireSettings:Storage:ConnectionString=mongodb://admin:admin@hangfiredb/hangfire-webapi?authSource=admin"
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ElasticConfiguration:Username=elastic"
-      - "ElasticConfiguration:Password=admin"
+      - "ElasticConfiguration__Uri=http://elasticsearch:9200"
+      - "ElasticConfiguration__Username=elastic"
+      - "ElasticConfiguration__Password=admin"
     depends_on:
       - hangfiredb
     ports:
