@@ -20,24 +20,25 @@ namespace Product.API.Extensions;
 
 public static class ServiceExtensions
 {
-    internal static IServiceCollection AddConfigurationSettings(this IServiceCollection services, 
+    internal static IServiceCollection AddConfigurationSettings(this IServiceCollection services,
         IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection(nameof(JwtSettings))
             .Get<JwtSettings>();
-        services.AddSingleton(jwtSettings);
+        services.AddSingleton(jwtSettings ?? new JwtSettings());
 
         var apiConfigSetting = configuration.GetSection("ApiConfig")
             .Get<ApiConfigSetting>();
-        services.AddSingleton(apiConfigSetting);
-        
+        services.AddSingleton(apiConfigSetting ?? new ApiConfigSetting());
+
         return services;
     }
-    
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
         services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+        services.AddHealthChecks();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
@@ -45,7 +46,7 @@ public static class ServiceExtensions
         services.AddInfrastructureServices();
         services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
         // services.AddJwtAuthentication();
-        
+
         return services;
     }
 
@@ -86,9 +87,9 @@ public static class ServiceExtensions
         var databaseSettings = configuration.GetSection(nameof(DatabaseSettings)).Get<DatabaseSettings>();
         if (databaseSettings == null || string.IsNullOrEmpty(databaseSettings.ConnectionString))
             throw new ArgumentNullException("Connection string is not configured.");
-        
+
         var builder = new MySqlConnectionStringBuilder(databaseSettings.ConnectionString);
-        services.AddDbContext<ProductContext>(m => m.UseMySql(builder.ConnectionString, 
+        services.AddDbContext<ProductContext>(m => m.UseMySql(builder.ConnectionString,
             ServerVersion.AutoDetect(builder.ConnectionString), e =>
         {
             e.MigrationsAssembly("Product.API");
