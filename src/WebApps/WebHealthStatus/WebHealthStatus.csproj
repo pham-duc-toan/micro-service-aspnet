@@ -9,7 +9,10 @@
 
     <ItemGroup>
       <PackageReference Include="AspNetCore.HealthChecks.UI" Version="6.0.1" />
+      <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.1" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="6.0.2" />
+      <PackageReference Include="Grpc.HealthCheck" Version="2.47.0" />
+      <PackageReference Include="Grpc.Net.Client" Version="2.47.0" />
     </ItemGroup>
 
     <ItemGroup>

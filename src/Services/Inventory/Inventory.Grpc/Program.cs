@@ -1,6 +1,9 @@
 using Common.Logging;
+using Grpc.Health.V1;
+using Grpc.HealthCheck;
 using Inventory.Grpc.Extensions;
 using Inventory.Grpc.Services;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,23 +22,37 @@ try
     // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
     builder.Services.AddGrpc();
     builder.Services.AddHealthChecks();
+    builder.Services.AddSingleton<HealthServiceImpl>();
 
-    // builder.WebHost.ConfigureKestrel(options =>
-    // {
-    //     // Setup a HTTP/2 endpoint without TLS.
-    //     options.ListenLocalhost(5007, o => o.Protocols =
-    //         HttpProtocols.Http2);
-    // });
+    var runningInContainer = string.Equals(
+        Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+        "true",
+        StringComparison.OrdinalIgnoreCase);
+
+    if (!runningInContainer)
+    {
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            // Use h2c for local gRPC on http://localhost:6007
+            options.ListenLocalhost(6007, o => o.Protocols = HttpProtocols.Http2);
+        });
+    }
 
     var app = builder.Build();
 
     // app.UseHttpsRedirection();
     // Configure the HTTP request pipeline.
     app.MapGrpcService<InventoryService>();
+    app.MapGrpcService<HealthServiceImpl>();
     app.MapGet("/",
         () =>
             "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
     app.MapHealthChecks("/hc");
+
+    var healthService = app.Services.GetRequiredService<HealthServiceImpl>();
+    healthService.SetStatus(string.Empty, HealthCheckResponse.Types.ServingStatus.Serving);
+    app.Lifetime.ApplicationStopping.Register(() =>
+        healthService.SetStatus(string.Empty, HealthCheckResponse.Types.ServingStatus.NotServing));
 
     app.Run();
 }
