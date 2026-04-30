@@ -1,6 +1,8 @@
 using Contracts.Domains.Interfaces;
+using IdentityServer4.AccessTokenValidation;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
+using Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -42,12 +44,13 @@ public static class ServiceExtensions
         services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.ConfigSwagger();
         services.ConfigureProductDbContext(configuration);
         services.AddInfrastructureServices();
         services.AddAutoMapper(cfg => cfg.AddProfile(new MappingProfile()));
         services.ConfigureHealthChecks();
-        // services.AddJwtAuthentication();
+        services.ConfigAuthentication();
+        services.ConfigAuthorization();
 
         return services;
     }
@@ -118,7 +121,7 @@ public static class ServiceExtensions
                 HealthStatus.Degraded);
     }
 
-    public static void ConfigSwagger(this IServiceCollection service, IConfiguration configuration)
+    public static IServiceCollection ConfigSwagger(this IServiceCollection service)
     {
         var apiConfigSetting = service.GetOptions<ApiConfigSetting>("ApiConfig");
         service.AddSwaggerGen(c =>
@@ -133,7 +136,7 @@ public static class ServiceExtensions
                     Name = "Identity Service"
                 }
             });
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            c.AddSecurityDefinition(IdentityServerAuthenticationDefaults.AuthenticationScheme, new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.OAuth2,
                 Flows = new OpenApiOAuthFlows
@@ -143,8 +146,8 @@ public static class ServiceExtensions
                         AuthorizationUrl = new Uri($"{apiConfigSetting.IdentityServerBaseUrl}/connect/authorize"),
                         Scopes = new Dictionary<string, string>
                         {
-                            {"tedu_api_read", "Read Scope"},
-                            {"tedu_api_write", "Write Scope"}
+                            {"tedu_microservices_api.read", "Read Scope"},
+                            {"tedu_microservices_api.write", "Write Scope"}
                         }
                     }
                 }
@@ -154,15 +157,17 @@ public static class ServiceExtensions
                 {
                     new OpenApiSecurityScheme
                     {
-                        Reference = new OpenApiReference{ Type = ReferenceType.SecurityScheme,Id = "Bearer" }
+                        Reference = new OpenApiReference{ Type = ReferenceType.SecurityScheme,Id = IdentityServerAuthenticationDefaults.AuthenticationScheme},
+                        Name="Bearer",
                     },
-                    new List<string>
-                    {
-                        "tedu_api_read",
-                        "tedu_api_write"
-                    }
+                        new List<string>
+                        {
+                            "tedu_microservices_api.read",
+                            "tedu_microservices_api.write"
+                        }
                 }
             });
         });
+        return service;
     }
 }
