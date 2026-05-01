@@ -27,7 +27,9 @@ public class ErrorWrappingMiddleware
         catch (ValidationException ex)
         {
             _logger.Error(ex, ex.Message);
-            errorMsg = ex.Errors.FirstOrDefault().Value.FirstOrDefault();
+            errorMsg = ex.Errors?
+                .SelectMany(item => item.Value ?? Array.Empty<string>())
+                .FirstOrDefault() ?? ex.Message;
             context.Response.StatusCode = StatusCodes.Status406NotAcceptable;
         }
         catch (Exception ex)
@@ -47,6 +49,7 @@ public class ErrorWrappingMiddleware
             var json = JsonSerializer.Serialize(response);
 
             await context.Response.WriteAsync(json);
+            return;
         }
 
         if (!context.Response.HasStarted && context.Response.StatusCode != 204 &&
@@ -54,7 +57,9 @@ public class ErrorWrappingMiddleware
         {
             context.Response.ContentType = "application/json";
 
-            var response = new ApiErrorResult<bool>(errorMsg);
+            var response = new ApiErrorResult<bool>(string.IsNullOrWhiteSpace(errorMsg)
+                ? "Something wrong happened. Please try again later"
+                : errorMsg);
 
             var json = JsonSerializer.Serialize(response);
 

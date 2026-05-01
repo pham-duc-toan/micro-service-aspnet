@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Shared.Common.Constants;
@@ -18,7 +19,7 @@ public class ClaimRequirementFilter : IAuthorizationFilter
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        var permissionClaims = context.HttpContext.User.Claims.SingleOrDefault(x => x.Type == "permission");
+        var permissionClaims = context.HttpContext.User.Claims.SingleOrDefault(x => x.Type.Equals(SystemConstants.Claims.Permissions));
 
         if (permissionClaims == null)
         {
@@ -26,8 +27,9 @@ public class ClaimRequirementFilter : IAuthorizationFilter
         }
 
         var permissions = JsonSerializer.Deserialize<List<string>>(permissionClaims.Value);
-        ///
-        ///
-        /// 
+        if (!permissions.Contains(PermissionHelper.GetPermission(_functionCode, _commandCode)))
+        {
+            context.Result = new ForbidResult();
+        }
     }
 }

@@ -1,4 +1,4 @@
-using Common.Logging;
+using Infrastructure.Identity;
 using Infrastructure.Middlewares;
 using Ocelot.Middleware;
 using OcelotApiGw.Extensions;
@@ -23,7 +23,7 @@ try
     builder.Services.AddSwaggerGen();
     builder.Services.ConfigureOcelot(builder.Configuration);
     builder.Services.ConfigureCors(builder.Configuration);
-
+    builder.Services.ConfigAuthentication();
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -37,15 +37,15 @@ try
     app.UseCors("CorsPolicy");
 
     app.UseMiddleware<ErrorWrappingMiddleware>();
-    // app.UseAuthentication();
+    //không cần bật vì ocelot tự kiểm tra dựa vào AuthenticationOptions và RouteClaimsRequirement trong ocelot.json
+    //app.UseAuthentication();
     app.UseRouting();
     // app.UseHttpsRedirection();
-    // app.UseAuthorization();
+    //app.UseAuthorization();
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapGet("/", context =>
         {
-            // await context.Response.WriteAsync($"Hello TEDU members! This is {builder.Environment.ApplicationName}");
             context.Response.Redirect("swagger/index.html");
             return Task.CompletedTask;
         });
@@ -53,7 +53,12 @@ try
     });
 
     app.UseSwaggerForOcelotUI(
-        opt => { opt.PathToSwaggerGenerator = "/swagger/docs"; });
+        opt =>
+        {
+            opt.PathToSwaggerGenerator = "/swagger/docs";
+            opt.OAuthClientId("tedu_microservices_swagger");
+            opt.DisplayRequestDuration();
+        });
 
     await app.UseOcelot();
     app.Run();
