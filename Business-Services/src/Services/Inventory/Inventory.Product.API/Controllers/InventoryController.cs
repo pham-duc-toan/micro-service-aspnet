@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using Infrastructure.Identity.Authorization;
 using Inventory.Product.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Common.Constants;
 using Shared.DTOs.Inventory;
 
 namespace Inventory.Product.API.Controllers;
@@ -19,6 +22,7 @@ public class InventoryController : ControllerBase
     
     [Route("items/{itemNo}", Name = "GetAllByItemNo")]
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<InventoryEntryDto>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<IEnumerable<InventoryEntryDto>>> GetAllByItemNo([Required]string itemNo)
     {
@@ -28,6 +32,7 @@ public class InventoryController : ControllerBase
     
     [Route("items/{itemNo}/paging", Name = "GetAllByItemNoPagingAsync")]
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<InventoryEntryDto>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<IEnumerable<InventoryEntryDto>>> GetAllByItemNoPagingAsync([Required]string itemNo, [FromQuery] GetInventoryPagingQuery query)
     {
@@ -38,6 +43,7 @@ public class InventoryController : ControllerBase
     
     [Route("{id}", Name = "GetInventoryById")]
     [HttpGet]
+    [ClaimRequirement(FunctionCode.INVENTORY, CommandCode.VIEW)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
     [ProducesResponseType(typeof(IEnumerable<InventoryEntryDto>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<IEnumerable<InventoryEntryDto>>> GetInventoryById([Required] string id)
@@ -49,6 +55,7 @@ public class InventoryController : ControllerBase
     }
     
     [HttpPost("purchase/{itemNo}", Name = "PurchaseOrder")]
+    [ClaimRequirement(FunctionCode.INVENTORY, CommandCode.CREATE)]
     [ProducesResponseType(typeof(InventoryEntryDto), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<InventoryEntryDto>> PurchaseOrder([Required] string itemNo, [FromBody] PurchaseProductDto model)
     {
@@ -59,6 +66,7 @@ public class InventoryController : ControllerBase
     
     [Route("{id}", Name = "DeleteById")]
     [HttpDelete]
+    [ClaimRequirement(FunctionCode.INVENTORY, CommandCode.DELETE)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
     [ProducesResponseType((int)HttpStatusCode.NoContent)]
     public async Task<IActionResult> DeleteById([Required] string id)
@@ -70,6 +78,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost("sales/{itemNo}")]
+    [Authorize]
     public async Task<IActionResult> SalesOrder(string itemNo, [FromBody] SalesProductDto model)
     {
         model.SetItemNo(itemNo);
@@ -78,6 +87,7 @@ public class InventoryController : ControllerBase
     }
     
     [HttpPost("sales/order-no/{orderNo}")]
+    [Authorize]
     public async Task<IActionResult> SaleItem([FromBody] SaleOrderDto model, string orderNo)
     {
         model.OrderDocNo = orderNo;

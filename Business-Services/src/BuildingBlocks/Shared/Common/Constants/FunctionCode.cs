@@ -2,5 +2,10 @@
 
 public enum FunctionCode
 {
-    PRODUCT
+    PRODUCT,
+    CUSTOMER,
+    BASKET,
+    ORDER,
+    INVENTORY,
+    SCHEDULE_JOB
 }

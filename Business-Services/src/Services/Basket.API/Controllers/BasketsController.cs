@@ -6,9 +6,12 @@ using Basket.API.GrpcServices;
 using Basket.API.Repositories.Interfaces;
 using Basket.API.Service.Interface;
 using EventBus.Messages.IntegrationEvents.Events;
+using Infrastructure.Identity.Authorization;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
+using Shared.Common.Constants;
 using Shared.DTOs.Basket;
 
 namespace Basket.API.Controllers;
@@ -33,6 +36,7 @@ public class BasketsController : ControllerBase
     }
 
     [HttpGet("{username}", Name = "GetBasket")]
+    [Authorize]
     [ProducesResponseType(typeof(CartDto), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<CartDto>> GetBasket([Required] string username)
     {
@@ -42,6 +46,7 @@ public class BasketsController : ControllerBase
     }
     
     [HttpPost(Name = "UpdateBasket")]
+    [Authorize]
     [ProducesResponseType(typeof(CartDto), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<CartDto>> UpdateBasket([FromBody] CartDto model)
     {
@@ -66,6 +71,7 @@ public class BasketsController : ControllerBase
     }
     
     [HttpDelete("{username}", Name = "DeleteBasket")]
+    [Authorize]
     [ProducesResponseType(typeof(bool), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<bool>> DeleteBasket([Required] string username)
     {
@@ -75,6 +81,7 @@ public class BasketsController : ControllerBase
 
     [Route("[action]")]
     [HttpPost]
+    [Authorize]
     [ProducesResponseType((int)HttpStatusCode.Accepted)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
@@ -93,6 +100,7 @@ public class BasketsController : ControllerBase
     }
     
     [HttpPost("email")]
+    [ClaimRequirement(FunctionCode.BASKET, CommandCode.CREATE)]
     public ContentResult SendEmail()
     {
         var result = _emailTemplateService.GenerateReminderEmail("datlqse140263@fpt.edu.vn");

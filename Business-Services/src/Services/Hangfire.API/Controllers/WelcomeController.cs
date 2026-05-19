@@ -1,5 +1,7 @@
 ﻿using Contracts.ScheduleJobs;
+using Infrastructure.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Common.Constants;
 using ILogger = Serilog.ILogger;
 
 namespace Hangfire.API.Controllers;
@@ -19,6 +21,7 @@ public class WelcomeController : ControllerBase
 
     [HttpPost]
     [Route("[action]")]
+    [ClaimRequirement(FunctionCode.SCHEDULE_JOB, CommandCode.CREATE)]
     public IActionResult Welcome()
     {
         var jobId = _jobService.Enqueue(() => ResponseWelcome("Welcome to Hangfire API"));
@@ -27,6 +30,7 @@ public class WelcomeController : ControllerBase
    
     [HttpPost]
     [Route("[action]")]
+    [ClaimRequirement(FunctionCode.SCHEDULE_JOB, CommandCode.CREATE)]
     public IActionResult DelayedWelcome()
     {
         var seconds = 5;
@@ -37,6 +41,7 @@ public class WelcomeController : ControllerBase
    
     [HttpPost]
     [Route("[action]")]
+    [ClaimRequirement(FunctionCode.SCHEDULE_JOB, CommandCode.CREATE)]
     public IActionResult WelcomeAt()
     {
         var enqueueAt = DateTimeOffset.UtcNow.AddSeconds(10);
@@ -47,6 +52,7 @@ public class WelcomeController : ControllerBase
    
     [HttpPost]
     [Route("[action]")]
+    [ClaimRequirement(FunctionCode.SCHEDULE_JOB, CommandCode.CREATE)]
     public IActionResult ConfirmedWelcome()
     {
         const int timeInSeconds = 5;

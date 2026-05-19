@@ -68,14 +68,20 @@ public static class SeedUserData
             await using var teduContext = scope.ServiceProvider
                 .GetRequiredService<TeduIdentityContext>();
             var adminPermissions = await teduContext.Permissions.Where(x => x.RoleId.Equals(role.Id)).ToListAsync();
-            if (!adminPermissions.Any())
+            var permissions = PermissionHelper.GetAllPermissions();
+            var newPermissions = permissions
+                .Where(permission => !adminPermissions.Any(x =>
+                    x.Function == permission.Function && x.Command == permission.Command))
+                .ToList();
+
+            if (newPermissions.Any())
             {
-                var permissions = PermissionHelper.GetAllPermissions();
-                foreach (var permission in permissions)
+                foreach (var permission in newPermissions)
                 {
                     var permissionEntity = new Permission(permission.Function, permission.Command, role.Id);
                     teduContext.Permissions.Add(permissionEntity);
                 }
+
                 await teduContext.SaveChangesAsync();
             }
         }

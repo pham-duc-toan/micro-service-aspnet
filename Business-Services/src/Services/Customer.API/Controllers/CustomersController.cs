@@ -1,16 +1,26 @@
 using Customer.API.Services.Interfaces;
+using Infrastructure.Identity.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Common.Constants;
 
 namespace Customer.API.Controllers;
 
-public static class CustomersController
+[ApiController]
+[Route("api/[controller]")]
+public class CustomersController : ControllerBase
 {
-    public static void MapCustomersAPI(this WebApplication app)
+    private readonly ICustomerService _customerService;
+
+    public CustomersController(ICustomerService customerService)
     {
-        app.MapGet("/api/customers/{username}",
-            async (string username, ICustomerService customerService) =>
-            {
-                var result = await customerService.GetCustomerByUsernameAsync(username);
-                return result != null ? result : Results.NotFound();
-            });
+        _customerService = customerService;
+    }
+
+    [HttpGet("{username}")]
+    [ClaimRequirement(FunctionCode.CUSTOMER, CommandCode.VIEW)]
+    public async Task<IActionResult> GetCustomerByUsername(string username)
+    {
+        var result = await _customerService.GetCustomerByUsernameAsync(username);
+        return result != null ? Ok(result) : NotFound();
     }
 }

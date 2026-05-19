@@ -24,10 +24,11 @@ public class ClaimRequirementFilter : IAuthorizationFilter
         if (permissionClaims == null)
         {
             context.Result = new ForbidResult();
+            return;
         }
 
         var permissions = JsonSerializer.Deserialize<List<string>>(permissionClaims.Value);
-        if (!permissions.Contains(PermissionHelper.GetPermission(_functionCode, _commandCode)))
+        if (permissions == null || !permissions.Contains(PermissionHelper.GetPermission(_functionCode, _commandCode)))
         {
             context.Result = new ForbidResult();
         }

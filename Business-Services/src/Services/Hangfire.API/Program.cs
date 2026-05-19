@@ -18,22 +18,20 @@ try
     // Add services to the container.
     builder.Host.AddAppConfigurations();
     builder.Services.AddConfigurationSettings(builder.Configuration);
-    builder.Services.AddHangfireService();
-    builder.Services.ConfigureServices();
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+        c.OAuthClientId("tedu_microservices_swagger");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hangfire API");
+        c.DisplayRequestDuration();
+    });
 
+    app.UseAuthentication();
     app.UseRouting();
     app.UseHttpsRedirection();
 

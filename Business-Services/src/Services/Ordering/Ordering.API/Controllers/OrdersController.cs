@@ -1,5 +1,7 @@
 using AutoMapper;
+using Infrastructure.Identity.Authorization;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ordering.Application.Common.Models;
 using Ordering.Application.Features.V1.Orders;
@@ -7,6 +9,7 @@ using Ordering.Application.Features.V1.Orders.Commands.DeleteOrderByDocNo;
 using Ordering.Application.Features.V1.Orders.Queries.GetOrderById;
 using Shared.DTOs.Order;
 using Shared.SeedWork;
+using Shared.Common.Constants;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 
@@ -38,6 +41,7 @@ public class OrdersController : ControllerBase
     #region CRUD
 
     [HttpGet("{username}", Name = RouteNames.GetOrders)]
+    [Authorize]
     [ProducesResponseType(typeof(IEnumerable<Ordering.Application.Common.Models.OrderDto>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<IEnumerable<Ordering.Application.Common.Models.OrderDto>>> GetOrdersByUserName([Required] string username)
     {
@@ -47,6 +51,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("by-id/{id:long}", Name = RouteNames.GetOrderById)]
+    [ClaimRequirement(FunctionCode.ORDER, CommandCode.VIEW)]
     [ProducesResponseType(typeof(Ordering.Application.Common.Models.OrderDto), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<Ordering.Application.Common.Models.OrderDto>> GetOrderById([Required] long id)
     {
@@ -56,6 +61,7 @@ public class OrdersController : ControllerBase
     }
     
     [HttpPost(Name = RouteNames.CreateOrder)]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResult<long>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<ApiResult<long>>> CreateOrder([FromBody]CreateOrderDto dto)
     {
@@ -65,6 +71,7 @@ public class OrdersController : ControllerBase
     }
     
     [HttpPut("{id:long}",Name = RouteNames.UpdateOrder)]
+    [ClaimRequirement(FunctionCode.ORDER, CommandCode.UPDATE)]
     [ProducesResponseType(typeof(ApiResult<Ordering.Application.Common.Models.OrderDto>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<Ordering.Application.Common.Models.OrderDto>> UpdateOrder([Required]long id, [FromBody]UpdateOrderCommand command)
     {
@@ -74,6 +81,7 @@ public class OrdersController : ControllerBase
     }
     
     [HttpDelete("{id:long}",Name = RouteNames.DeleteOrder)]
+    [ClaimRequirement(FunctionCode.ORDER, CommandCode.DELETE)]
     [ProducesResponseType(typeof(NoContentResult), (int)HttpStatusCode.NoContent)]
     public async Task<ActionResult> DeleteOrder([Required]long id)
     {
@@ -82,6 +90,7 @@ public class OrdersController : ControllerBase
         return NoContent();
     }
     [HttpDelete(template: "document-no/{documentNo}", Name = RouteNames.DeleteOrderByDocumentNo)]
+    [ClaimRequirement(FunctionCode.ORDER, CommandCode.DELETE)]
     [ProducesResponseType(typeof(ApiResult<bool>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<ApiResult<bool>>> DeleteOrderByDocumentNo([Required] string documentNo)
     {

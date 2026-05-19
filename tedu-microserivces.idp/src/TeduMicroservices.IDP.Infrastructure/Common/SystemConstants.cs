@@ -24,13 +24,23 @@ public static class SystemConstants
     {
         public const string Role = "ROLE";
         public const string Product = "PRODUCT";
+        public const string Customer = "CUSTOMER";
+        public const string Basket = "BASKET";
+        public const string Order = "ORDER";
+        public const string Inventory = "INVENTORY";
+        public const string ScheduleJob = "SCHEDULE_JOB";
         
         public static List<string> GetAllFunctions()
         {
             return new List<string>
             {
                 Role,
-                Product
+                Product,
+                Customer,
+                Basket,
+                Order,
+                Inventory,
+                ScheduleJob
             };
         }
     }

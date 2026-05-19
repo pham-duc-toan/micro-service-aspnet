@@ -17,6 +17,13 @@
           "Port": 6003
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "customer-service"
     },
     // Product api: http://localhost:5002/api/products
@@ -33,6 +40,13 @@
           "Port": 6002
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "product-service"
     },
     {
@@ -49,13 +63,13 @@
           "Port": 6002
         }
       ],
-      //      "AuthenticationOptions": {
-      //        "AuthenticationProviderKey": "Bearer",
-      //        "AllowedScopes": []
-      //      },
-      //      "RouteClaimsRequirement": {
-      //        "Role": "Admin"
-      //      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "product-service"
     },
     {
@@ -90,6 +104,13 @@
         "TimeoutValue": 5000
         //If the service throws a second exception, the service will not be accessible for five seconds
       },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "product-service"
     },
     {
@@ -105,6 +126,13 @@
           "Port": 6002
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "product-service"
     },
     // Basket api: http://localhost:5004/api/baskets
@@ -122,6 +150,10 @@
           "Port": 6004
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "SwaggerKey": "basket-service"
     },
     {
@@ -137,6 +169,10 @@
           "Port": 6004
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "SwaggerKey": "basket-service"
     },
     {
@@ -152,14 +188,18 @@
           "Port": 6004
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "SwaggerKey": "basket-service"
     },
     {
-      "UpstreamPathTemplate": "/baskets/checkout/{username}",
+      "UpstreamPathTemplate": "/baskets/email",
       "UpstreamHttpMethod": [
         "POST"
       ],
-      "DownstreamPathTemplate": "/api/baskets/checkout/{username}",
+      "DownstreamPathTemplate": "/api/baskets/email",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -167,13 +207,60 @@
           "Port": 6004
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "basket-service"
     },
     // Order api: http://localhost:5005/api/{version}/orders
     {
+      "UpstreamPathTemplate": "/{version}/orders/{username}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/{version}/orders/{username}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6005
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "order-service"
+    },
+    {
+      "UpstreamPathTemplate": "/{version}/orders/by-id/{id}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
+      "DownstreamPathTemplate": "/api/{version}/orders/by-id/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6005
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
+      "SwaggerKey": "order-service"
+    },
+    {
       "UpstreamPathTemplate": "/{version}/orders/{id}",
       "UpstreamHttpMethod": [
-        "GET",
         "PUT",
         "DELETE"
       ],
@@ -185,6 +272,13 @@
           "Port": 6005
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "order-service"
     },
     {
@@ -200,6 +294,32 @@
           "Port": 6005
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "order-service"
+    },
+    {
+      "UpstreamPathTemplate": "/{version}/orders/document-no/{documentNo}",
+      "UpstreamHttpMethod": [
+        "DELETE"
+      ],
+      "DownstreamPathTemplate": "/api/{version}/orders/document-no/{documentNo}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6005
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "order-service"
     },
     // Inventory API : http://localhost:5006/inventory
@@ -247,6 +367,13 @@
           "Port": 6006
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "inventory-service"
     },
     {
@@ -262,7 +389,119 @@
           "Port": 6006
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
       "SwaggerKey": "inventory-service"
+    },
+    {
+      "UpstreamPathTemplate": "/inventory/sales/{itemNo}",
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/inventory/sales/{itemNo}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6006
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "inventory-service"
+    },
+    {
+      "UpstreamPathTemplate": "/inventory/sales/order-no/{orderNo}",
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/inventory/sales/order-no/{orderNo}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6006
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "inventory-service"
+    },
+    // Hangfire API : http://localhost:6008/api
+    {
+      "UpstreamPathTemplate": "/schedule-job/send-email",
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/schedule-job/send-email",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6008
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
+      "SwaggerKey": "hangfire-service"
+    },
+    {
+      "UpstreamPathTemplate": "/schedule-job/delete/jobId/{id}",
+      "UpstreamHttpMethod": [
+        "DELETE"
+      ],
+      "DownstreamPathTemplate": "/api/schedule-job/delete/jobId/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6008
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
+      "SwaggerKey": "hangfire-service"
+    },
+    {
+      "UpstreamPathTemplate": "/welcome/{action}",
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/welcome/{action}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": 6008
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "roles": "Administrator"
+      },
+      "SwaggerKey": "hangfire-service"
     }
   ],
   "SwaggerEndPoints": [
@@ -313,6 +552,16 @@
           "Name": "Inventory API",
           "Version": "v1",
           "Url": "http://inventory.product.api/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "hangfire-service",
+      "Config": [
+        {
+          "Name": "Hangfire API",
+          "Version": "v1",
+          "Url": "http://hangfire.api/swagger/v1/swagger.json"
         }
       ]
     }

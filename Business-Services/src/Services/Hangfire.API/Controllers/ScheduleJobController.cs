@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Hangfire.API.Service.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.ScheduleJob;
 
@@ -17,6 +18,7 @@ public class ScheduleJobController : ControllerBase
     }
 
     [HttpPost("send-email")]
+    [AllowAnonymous]
     public IActionResult SendEmail([FromBody] ReminderCheckoutOrderDto dto)
     {
         var jobId = _backgroundJobService.SendEmailContent(dto.email, dto.subject, dto.content, dto.enqueue);
@@ -25,6 +27,7 @@ public class ScheduleJobController : ControllerBase
     
     [HttpDelete]
     [Route("delete/jobId/{id}")]
+    [AllowAnonymous]
     public IActionResult DeleteJobId([Required] string id)
     {
         var result = _backgroundJobService.ScheduleJobService.Delete(id);

@@ -21,25 +21,18 @@ try
     // Add services to the container.
     builder.Host.AddAppConfigurations();
     builder.Services.AddConfigurationSettings(builder.Configuration);
-    builder.Services.AddApplicationServices();
-    builder.Services.AddInfrastructureServices();
-    builder.Services.ConfigureMassTransit();
-
-    builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(c =>
-                c.SwaggerEndpoint("/swagger/v1/swagger.json",
-                    "Swagger Order API v1"));
-    }
+        c.OAuthClientId("tedu_microservices_swagger");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Order API");
+        c.DisplayRequestDuration();
+    });
 
     // Initialise and seed database
     using (var scope = app.Services.CreateScope())
@@ -52,6 +45,7 @@ try
     app.UseMiddleware<ErrorWrappingMiddleware>();
 
     // app.UseHttpsRedirection(); //production only
+    app.UseAuthentication();
     app.UseRouting();
 
     app.UseAuthorization();
