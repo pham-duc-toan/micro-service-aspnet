@@ -74,6 +74,14 @@ public static class ServiceExtensions
         {
             options.AddPolicy("CorsPolicy", buider =>
             {
+                if (string.Equals(origins, "*", StringComparison.Ordinal))
+                {
+                    buider.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    return;
+                }
+
                 buider.WithOrigins(origins)
                     .AllowAnyHeader()
                     .AllowAnyMethod();

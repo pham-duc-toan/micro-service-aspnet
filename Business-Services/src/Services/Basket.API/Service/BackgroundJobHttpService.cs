@@ -29,7 +29,7 @@ public class BackgroundJobHttpService
     }
     public async Task<string> SendEmailReminderCheckout(ReminderCheckoutOrderDto model)
     {
-        var uri = $"{ScheduledJobUrl}/send-email-reminder-checkout-order";
+        var uri = $"{ScheduledJobUrl}/send-email";
         var response = await Client.PostAsJson(uri, model);
         string jobId = null;
 

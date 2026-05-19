@@ -30,7 +30,14 @@ public class ScheduleJobController : ControllerBase
     [AllowAnonymous]
     public IActionResult DeleteJobId([Required] string id)
     {
-        var result = _backgroundJobService.ScheduleJobService.Delete(id);
-        return Ok(result);
+        try
+        {
+            var result = _backgroundJobService.ScheduleJobService.Delete(id);
+            return Ok(result);
+        }
+        catch
+        {
+            return Ok(false);
+        }
     }
 }
