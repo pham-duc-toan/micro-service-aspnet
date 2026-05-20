@@ -1,243 +1,494 @@
-import { useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { NoticeRail } from './components/NoticeRail'
+import { StorefrontProvider } from './storefront/StorefrontContext'
 import {
-  Boxes,
-  BriefcaseBusiness,
-  CheckCircle2,
-  ClipboardList,
-  Database,
-  KeyRound,
-  Loader2,
-  Lock,
-  Mail,
-  Package,
-  Play,
-  RefreshCcw,
-  Search,
-  Send,
-  ShieldCheck,
-  ShoppingBasket,
-  Trash2,
-  User,
-  Users,
-} from 'lucide-react'
+  ADMIN_ROLE_ID,
+  DEFAULT_CHECKOUT,
+  DEFAULT_INVENTORY_FORM,
+  DEFAULT_ORDER_FORM,
+  DEFAULT_PERMISSION_FORM,
+  DEFAULT_PRODUCT_FORM,
+  LOGIN_DEFAULTS,
+  createDefaultJobForm,
+} from './storefront/constants'
+import { request as apiRequest } from './storefront/api'
+import {
+  createEmptyBasket,
+  mergePristineForm,
+  normalizeBasket,
+  normalizeCustomer,
+  normalizeObject,
+  normalizeOrder,
+  normalizeOrderCreate,
+  normalizeProduct,
+  toList,
+} from './storefront/normalizers'
+import { decodeJwt, formatNumber } from './storefront/format'
 import './App.css'
-
-const IDENTITY_URL = import.meta.env.VITE_IDENTITY_URL || 'http://localhost:6011'
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:6001'
-const ADMIN_ROLE_ID = 'b6105f01-18f5-433c-91e0-dbd80d27e7f4'
-
-const navItems = [
-  { id: 'overview', label: 'Overview', icon: BriefcaseBusiness },
-  { id: 'identity', label: 'Identity', icon: ShieldCheck },
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'inventory', label: 'Inventory', icon: Boxes },
-  { id: 'basket', label: 'Basket', icon: ShoppingBasket },
-  { id: 'orders', label: 'Orders', icon: ClipboardList },
-  { id: 'customers', label: 'Customers', icon: Users },
-  { id: 'jobs', label: 'Jobs', icon: Mail },
-]
-
-const defaultCredentials = {
-  username: 'alicesmith@example.com',
-  password: 'alice123',
-  clientId: 'tedu_microservices_postman',
-  clientSecret: 'SuperStrongSecret',
-}
-
-const productSeed = {
-  no: `FE-${Date.now()}`,
-  name: 'Frontend Test Product',
-  summary: 'Created from React dashboard',
-  description: 'React Vite API dashboard item',
-  price: 19.9,
-}
-
-const orderSeed = {
-  userName: 'customer1',
-  totalPrice: 42.42,
-  firstName: 'customer1',
-  lastName: 'customer',
-  emailAddress: 'customer1@local.com',
-  shippingAddress: 'Wollongong',
-  invoiceAddress: 'Australia',
-}
-
-function defaultEmailJob() {
-  return {
-    email: 'customer1@local.com',
-    subject: 'Reminder',
-    content: 'Hello from the dashboard',
-    enqueue: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-  }
-}
-
-function asText(value) {
-  if (value === null || value === undefined || value === '') return '-'
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
-}
-
-function getOrderPayload(form, includeUserName) {
-  const payload = {
-    totalPrice: Number(form.totalPrice),
-    firstName: form.firstName,
-    lastName: form.lastName,
-    emailAddress: form.emailAddress,
-    shippingAddress: form.shippingAddress,
-    invoiceAddress: form.invoiceAddress,
-  }
-  if (includeUserName) payload.userName = form.userName
-  return payload
-}
-
-function Field({ label, value, onChange, type = 'text', placeholder }) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
-  )
-}
-
-function TextArea({ label, value, onChange }) {
-  return (
-    <label className="field wide">
-      <span>{label}</span>
-      <textarea value={value} rows={4} onChange={(event) => onChange(event.target.value)} />
-    </label>
-  )
-}
-
-function JsonBlock({ value }) {
-  return <pre className="json">{JSON.stringify(value ?? null, null, 2)}</pre>
-}
-
-function DataTable({ rows, columns, empty = 'No data' }) {
-  const items = Array.isArray(rows) ? rows : rows ? [rows] : []
-  if (items.length === 0) return <div className="empty">{empty}</div>
-
-  return (
-    <div className="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th key={column.key}>{column.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((row, index) => (
-            <tr key={row.id || row.documentNo || row.no || index}>
-              {columns.map((column) => (
-                <td key={column.key}>{column.render ? column.render(row) : asText(row[column.key])}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
+import { StorefrontLayout } from './layouts/StorefrontLayout'
+import { MerchantLayout } from './layouts/MerchantLayout'
+import { HomePage } from './pages/HomePage'
+import { ShopPage } from './pages/ShopPage'
+import { ProductPage } from './pages/ProductPage'
+import { CartPage } from './pages/CartPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { AccountPage } from './pages/AccountPage'
+import { StudioOverviewPage } from './pages/studio/StudioOverviewPage'
+import { StudioCatalogPage } from './pages/studio/StudioCatalogPage'
+import { StudioInventoryPage } from './pages/studio/StudioInventoryPage'
+import { StudioOrdersPage } from './pages/studio/StudioOrdersPage'
+import { StudioAccessPage } from './pages/studio/StudioAccessPage'
+import { StudioJobsPage } from './pages/studio/StudioJobsPage'
 
 function App() {
-  const [active, setActive] = useState('overview')
-  const [credentials, setCredentials] = useState(defaultCredentials)
+  const [view, setView] = useState('shop')
+  const [adminTab, setAdminTab] = useState('catalog')
+  const [sheet, setSheet] = useState('auth')
   const [token, setToken] = useState(() => localStorage.getItem('access_token') || '')
-  const [busy, setBusy] = useState('')
-  const [logs, setLogs] = useState([])
+  const [authForm, setAuthForm] = useState(LOGIN_DEFAULTS)
+  const [busy, setBusy] = useState({ count: 0, label: '' })
+  const [alerts, setAlerts] = useState([])
+
   const [account, setAccount] = useState(null)
+  const [customer, setCustomer] = useState(null)
   const [permissions, setPermissions] = useState([])
   const [roleId, setRoleId] = useState(ADMIN_ROLE_ID)
-  const [permissionForm, setPermissionForm] = useState({ function: 'PRODUCT', command: 'VIEW' })
+
   const [products, setProducts] = useState([])
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [productForm, setProductForm] = useState(productSeed)
-  const [productNoSearch, setProductNoSearch] = useState('Lotus')
-  const [inventoryRows, setInventoryRows] = useState([])
-  const [inventoryForm, setInventoryForm] = useState({ itemNo: 'Lotus', quantity: 5, externalDocNo: 'EXT-001' })
-  const [inventoryId, setInventoryId] = useState('')
+  const [selectedProductNo, setSelectedProductNo] = useState('')
+  const [productDraft, setProductDraft] = useState(DEFAULT_PRODUCT_FORM)
+  const [productQuery, setProductQuery] = useState('')
+  const [sortMode, setSortMode] = useState('featured')
+  const [displayCount, setDisplayCount] = useState(12)
+  const [sheetQty, setSheetQty] = useState('1')
+
+  const [stockCache, setStockCache] = useState({})
+  const stockCacheRef = useRef({})
+  const stockRequestRef = useRef(new Set())
+
   const [basket, setBasket] = useState(null)
-  const [basketForm, setBasketForm] = useState({
-    username: 'customer1',
-    emailAddress: 'customer1@local.com',
-    itemNo: 'Lotus',
-    itemName: 'Esprit',
-    quantity: 1,
-    itemPrice: 177940.49,
-  })
-  const [orderRows, setOrderRows] = useState([])
-  const [orderForm, setOrderForm] = useState(orderSeed)
-  const [orderId, setOrderId] = useState('')
-  const [documentNo, setDocumentNo] = useState('')
-  const [customer, setCustomer] = useState(null)
-  const [customerName, setCustomerName] = useState('customer1')
+  const [checkoutForm, setCheckoutForm] = useState(DEFAULT_CHECKOUT)
+
+  const [orders, setOrders] = useState([])
+  const [selectedOrderId, setSelectedOrderId] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState(null)
+
+  const [orderAdminUser, setOrderAdminUser] = useState('customer1')
+  const [orderAdminForm, setOrderAdminForm] = useState(DEFAULT_ORDER_FORM)
+  const [orderAdminId, setOrderAdminId] = useState('')
+  const [orderAdminDocumentNo, setOrderAdminDocumentNo] = useState('')
+  const [adminOrders, setAdminOrders] = useState([])
+
+  const [inventoryForm, setInventoryForm] = useState(DEFAULT_INVENTORY_FORM)
+  const [inventoryRows, setInventoryRows] = useState([])
+  const [inventoryPageRows, setInventoryPageRows] = useState([])
+  const [inventoryDeleteId, setInventoryDeleteId] = useState('')
+
+  const [permissionForm, setPermissionForm] = useState(DEFAULT_PERMISSION_FORM)
+  const [jobForm, setJobForm] = useState(createDefaultJobForm())
   const [jobId, setJobId] = useState('')
-  const [emailJob, setEmailJob] = useState(defaultEmailJob)
+  const [emailPreview, setEmailPreview] = useState('')
 
-  const authStatus = useMemo(() => (token ? 'Authenticated' : 'No token'), [token])
+  const tokenClaims = useMemo(() => decodeJwt(token), [token])
+  const activeUserName = account?.userName || customer?.userName || tokenClaims?.preferred_username || checkoutForm.userName || authForm.username
+  const activeDisplayName = [account?.firstName || customer?.firstName, account?.lastName || customer?.lastName].filter(Boolean).join(' ') || activeUserName
+  const permissionSet = useMemo(() => new Set((permissions || []).map((permission) => `${permission.function}.${permission.command}`)), [permissions])
+  const can = useCallback((functionCode, commandCode) => permissionSet.has(`${functionCode}.${commandCode}`), [permissionSet])
+  const selectedProduct = useMemo(() => products.find((product) => product.no === selectedProductNo) || null, [products, selectedProductNo])
+  const selectedProductStock = selectedProductNo ? stockCache[selectedProductNo] : null
+  const productCount = products.length
+  const cartCount = useMemo(() => (basket?.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0), [basket])
+  const orderCount = orders.length
+  const totalInventoryMoves = useMemo(() => Object.values(stockCache).reduce((sum, entry) => sum + (entry?.total || 0), 0), [stockCache])
 
-  function addLog(entry) {
-    setLogs((current) => [{ time: new Date().toLocaleTimeString(), ...entry }, ...current].slice(0, 30))
+  useEffect(() => {
+    stockCacheRef.current = stockCache
+  }, [stockCache])
+
+  useEffect(() => {
+    localStorage.setItem('access_token', token)
+    if (!token) {
+      localStorage.removeItem('access_token')
+    }
+  }, [token])
+
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // Session hydration intentionally runs once per token change.
+  useEffect(() => {
+    if (!token) {
+      setAccount(null)
+      setCustomer(null)
+      setPermissions([])
+      setProducts([])
+      setSelectedProductNo('')
+      setBasket(null)
+      setOrders([])
+      setSelectedOrder(null)
+      setSelectedOrderId('')
+      setEmailPreview('')
+      setSheet('auth')
+      setView('shop')
+      return
+    }
+
+    void hydrateSession()
+  }, [token, tokenClaims])
+  /* eslint-enable react-hooks/exhaustive-deps */
+
+  /* eslint-disable react-hooks/exhaustive-deps */
+  // Stock prefetch follows the visible catalog slice and is guarded per item.
+  useEffect(() => {
+    if (!token || !products.length) return
+    const targets = displayProducts.slice(0, 8)
+    targets.forEach((product) => {
+      void ensureStock(product.no)
+    })
+  }, [token, products, productQuery, sortMode, displayCount, stockCache])
+  /* eslint-enable react-hooks/exhaustive-deps */
+
+  useEffect(() => {
+    setDisplayCount(12)
+  }, [productQuery, sortMode])
+
+  useEffect(() => {
+    if (!account && !customer) return
+    const profile = {
+      userName: activeUserName,
+      firstName: account?.firstName || customer?.firstName || DEFAULT_CHECKOUT.firstName,
+      lastName: account?.lastName || customer?.lastName || DEFAULT_CHECKOUT.lastName,
+      emailAddress: customer?.emailAddress || account?.email || DEFAULT_CHECKOUT.emailAddress,
+      shippingAddress: checkoutForm.shippingAddress,
+      invoiceAddress: checkoutForm.invoiceAddress,
+    }
+    setCheckoutForm((current) => mergePristineForm(current, DEFAULT_CHECKOUT, profile))
+    setOrderAdminForm((current) =>
+      mergePristineForm(current, DEFAULT_ORDER_FORM, {
+        userName: activeUserName,
+        firstName: account?.firstName || customer?.firstName || DEFAULT_ORDER_FORM.firstName,
+        lastName: account?.lastName || customer?.lastName || DEFAULT_ORDER_FORM.lastName,
+        emailAddress: customer?.emailAddress || account?.email || DEFAULT_ORDER_FORM.emailAddress,
+        shippingAddress: checkoutForm.shippingAddress || DEFAULT_ORDER_FORM.shippingAddress,
+        invoiceAddress: checkoutForm.invoiceAddress || DEFAULT_ORDER_FORM.invoiceAddress,
+      }),
+    )
+    setJobForm((current) =>
+      current.email === DEFAULT_CHECKOUT.emailAddress ? { ...current, email: customer?.emailAddress || account?.email || current.email } : current,
+    )
+  }, [account, customer, activeUserName, checkoutForm.shippingAddress, checkoutForm.invoiceAddress])
+
+  useEffect(() => {
+    if (!selectedProductNo && products[0]?.no) {
+      setSelectedProductNo(products[0].no)
+    }
+  }, [products, selectedProductNo])
+
+  async function hydrateSession() {
+    const identity = await loadAccount()
+    const username = identity?.userName || tokenClaims?.preferred_username || authForm.username || DEFAULT_CHECKOUT.userName
+    await Promise.all([loadCustomerProfile(username), loadPermissions(roleId), loadProducts(), loadBasket(username), loadOrders(username)])
+    setSheet((current) => (current === 'auth' ? 'account' : current))
   }
 
-  async function request(name, path, options = {}) {
-    const baseUrl = options.identity ? IDENTITY_URL : GATEWAY_URL
-    const url = path.startsWith('http') ? path : `${baseUrl}${path}`
-    const headers = new Headers(options.headers || {})
-    if (options.body !== undefined) headers.set('Content-Type', 'application/json')
-    if (token && options.auth !== false) headers.set('Authorization', `Bearer ${token}`)
-
-    setBusy(name)
-    const started = performance.now()
+  async function request({ service, path, method = 'GET', body, headers = {}, auth = true, label = '' }) {
+    setBusy((current) => ({ count: current.count + 1, label: label || `${method} ${service}` }))
     try {
-      const response = await fetch(url, {
-        method: options.method || 'GET',
+      return await apiRequest({
+        service,
+        path,
+        method,
+        body,
         headers,
-        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+        auth,
+        token,
       })
-      const contentType = response.headers.get('content-type') || ''
-      const raw = await response.text()
-      const data = contentType.includes('application/json') && raw ? JSON.parse(raw) : raw
-      const elapsed = Math.round(performance.now() - started)
-      addLog({ name, method: options.method || 'GET', url, status: response.status, elapsed, ok: response.ok })
-      if (!response.ok) {
-        throw new Error(typeof data === 'string' ? data : JSON.stringify(data))
-      }
-      return data
     } finally {
-      setBusy('')
+      setBusy((current) => ({ count: Math.max(0, current.count - 1), label: current.label }))
+    }
+  }
+
+  function notify(message, tone = 'info') {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    setAlerts((current) => [{ id, message, tone }, ...current].slice(0, 4))
+    window.setTimeout(() => {
+      setAlerts((current) => current.filter((item) => item.id !== id))
+    }, 4000)
+  }
+
+  function requireAuth() {
+    if (token) return true
+    setSheet('auth')
+    notify('Sign in to continue', 'warning')
+    return false
+  }
+
+  function switchView(nextView) {
+    setView(nextView)
+    if (sheet !== 'auth') setSheet(null)
+  }
+
+  function navigateView(nextView) {
+    if (!token && nextView !== 'shop') {
+      openAuthSheet()
+      notify('Sign in to continue', 'warning')
+      return
+    }
+    switchView(nextView)
+  }
+
+  async function loadAccount() {
+    try {
+      const data = await request({
+        service: 'identity',
+        path: '/api/account',
+        label: 'Load account',
+      })
+      const accountData = normalizeObject(data)
+      setAccount(accountData)
+      return accountData
+    } catch (error) {
+      setAccount(null)
+      notify(error.message, 'error')
+      return null
+    }
+  }
+
+  async function loadCustomerProfile(username) {
+    try {
+      const data = await request({
+        service: 'customer',
+        path: `/customers/${encodeURIComponent(username)}`,
+        label: 'Load customer',
+      })
+      const customerData = normalizeCustomer(data)
+      setCustomer(customerData)
+      return customerData
+    } catch (error) {
+      setCustomer(null)
+      notify(error.message, 'error')
+      return null
+    }
+  }
+
+  async function loadPermissions(role) {
+    try {
+      const data = await request({
+        service: 'identity',
+        path: `/api/permissions/roles/${encodeURIComponent(role)}`,
+        label: 'Load permissions',
+      })
+      const permissionList = toList(data)
+      setPermissions(permissionList)
+      return permissionList
+    } catch (error) {
+      setPermissions([])
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function loadProducts() {
+    try {
+      const data = await request({
+        service: 'catalog',
+        path: '/products',
+        label: 'Load catalog',
+      })
+      const list = toList(data)
+      setProducts(list)
+      if (!selectedProductNo && list[0]?.no) {
+        setSelectedProductNo(list[0].no)
+      }
+      return list
+    } catch (error) {
+      setProducts([])
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function loadBasket(username = activeUserName) {
+    try {
+      const data = await request({
+        service: 'basket',
+        path: `/baskets/${encodeURIComponent(username)}`,
+        label: 'Load basket',
+      })
+      const basketData = normalizeBasket(data)
+      setBasket(basketData)
+      return basketData
+    } catch (error) {
+      setBasket(null)
+      notify(error.message, 'error')
+      return null
+    }
+  }
+
+  async function loadOrders(username = activeUserName) {
+    try {
+      const data = await request({
+        service: 'orders',
+        path: `/v1/orders/${encodeURIComponent(username)}`,
+        label: 'Load orders',
+      })
+      const list = toList(data)
+      setOrders(list)
+      if (list.length) {
+        const nextSelected = list.find((order) => String(order.id) === String(selectedOrderId)) || list[0]
+        setSelectedOrder(nextSelected || null)
+        setSelectedOrderId(nextSelected ? String(nextSelected.id) : '')
+      } else {
+        setSelectedOrder(null)
+        setSelectedOrderId('')
+      }
+      return list
+    } catch (error) {
+      setOrders([])
+      setSelectedOrder(null)
+      setSelectedOrderId('')
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function loadAdminOrders(username = orderAdminUser) {
+    try {
+      const data = await request({
+        service: 'orders',
+        path: `/v1/orders/${encodeURIComponent(username)}`,
+        label: 'Load admin orders',
+      })
+      const list = toList(data)
+      setAdminOrders(list)
+      return list
+    } catch (error) {
+      setAdminOrders([])
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function loadInventoryHistory(itemNo = inventoryForm.itemNo) {
+    try {
+      const data = await request({
+        service: 'inventory',
+        path: `/inventory/items/${encodeURIComponent(itemNo)}`,
+        label: 'Load inventory',
+      })
+      const list = toList(data)
+      setInventoryRows(list)
+      return list
+    } catch (error) {
+      setInventoryRows([])
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function loadInventoryPage(itemNo = inventoryForm.itemNo) {
+    try {
+      const query = new URLSearchParams({
+        pageIndex: inventoryForm.pageIndex || '1',
+        pageSize: inventoryForm.pageSize || '10',
+      })
+      if (inventoryForm.searchTerm) query.set('searchTerm', inventoryForm.searchTerm)
+      const data = await request({
+        service: 'inventory',
+        path: `/inventory/items/${encodeURIComponent(itemNo)}/paging?${query.toString()}`,
+        label: 'Load inventory page',
+      })
+      const list = toList(data)
+      setInventoryPageRows(list)
+      return list
+    } catch (error) {
+      setInventoryPageRows([])
+      notify(error.message, 'error')
+      return []
+    }
+  }
+
+  async function ensureStock(itemNo) {
+    if (!token || !itemNo) return null
+    const current = stockCacheRef.current[itemNo]
+    if (current?.status === 'ready' || stockRequestRef.current.has(itemNo)) {
+      return current || null
+    }
+
+    stockRequestRef.current.add(itemNo)
+    setStockCache((currentCache) => ({
+      ...currentCache,
+      [itemNo]: {
+        status: 'loading',
+        total: currentCache[itemNo]?.total ?? null,
+        entries: currentCache[itemNo]?.entries ?? [],
+      },
+    }))
+
+    try {
+      const data = await request({
+        service: 'inventory',
+        path: `/inventory/items/${encodeURIComponent(itemNo)}`,
+        label: `Load stock ${itemNo}`,
+      })
+      const entries = toList(data)
+      const total = entries.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0)
+      const next = {
+        status: 'ready',
+        total,
+        entries,
+        updatedAt: Date.now(),
+      }
+      setStockCache((currentCache) => ({
+        ...currentCache,
+        [itemNo]: next,
+      }))
+      return next
+    } catch (error) {
+      setStockCache((currentCache) => ({
+        ...currentCache,
+        [itemNo]: {
+          status: 'error',
+          total: null,
+          entries: [],
+          error: error.message,
+        },
+      }))
+      return null
+    } finally {
+      stockRequestRef.current.delete(itemNo)
     }
   }
 
   async function login() {
-    setBusy('Login')
     try {
       const body = new URLSearchParams({
         grant_type: 'password',
-        client_id: credentials.clientId,
-        client_secret: credentials.clientSecret,
-        username: credentials.username,
-        password: credentials.password,
+        client_id: authForm.clientId,
+        client_secret: authForm.clientSecret,
+        username: authForm.username,
+        password: authForm.password,
         scope: 'openid profile email roles tedu_microservices_api.read tedu_microservices_api.write',
       })
-      const response = await fetch(`${IDENTITY_URL}/connect/token`, {
+      const data = await request({
+        service: 'identity',
+        path: '/connect/token',
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
+        auth: false,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        label: 'Login',
       })
-      const data = await response.json()
-      addLog({ name: 'Login', method: 'POST', url: `${IDENTITY_URL}/connect/token`, status: response.status, ok: response.ok })
-      if (!response.ok) throw new Error(JSON.stringify(data))
-      localStorage.setItem('access_token', data.access_token)
-      setToken(data.access_token)
-    } finally {
-      setBusy('')
+      const accessToken = data?.access_token || data?.AccessToken
+      if (!accessToken) {
+        throw new Error('Login did not return an access token')
+      }
+      setToken(accessToken)
+      setSheet('account')
+      notify('Signed in', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
     }
   }
 
@@ -245,571 +496,880 @@ function App() {
     localStorage.removeItem('access_token')
     setToken('')
     setAccount(null)
+    setCustomer(null)
+    setPermissions([])
+    setProducts([])
+    setSelectedProductNo('')
+    setProductDraft(DEFAULT_PRODUCT_FORM)
+    setBasket(null)
+    setOrders([])
+    setSelectedOrder(null)
+    setSelectedOrderId('')
+    setAdminOrders([])
+    setView('shop')
+    setSheet('auth')
+    notify('Signed out', 'info')
   }
 
-  async function loadAccount() {
-    const data = await request('Account', '/api/account', { identity: true })
-    setAccount(data)
+  async function refreshStorefront() {
+    if (!token) return
+    await Promise.all([loadProducts(), loadBasket(activeUserName), loadOrders(activeUserName)])
+    notify('Storefront refreshed', 'success')
   }
 
-  async function loadPermissions() {
-    const data = await request('Permissions', `/api/permissions/roles/${roleId}`, { identity: true })
-    setPermissions(data)
+  function openProduct(product) {
+    setSelectedProductNo(product.no)
+    setSheetQty('1')
+    setSheet('product')
   }
 
-  async function addPermission() {
-    await request('Add permission', `/api/permissions/roles/${roleId}`, {
-      identity: true,
-      method: 'POST',
-      body: permissionForm,
-    })
-    await loadPermissions()
+  function openAccountSheet() {
+    setSheet('account')
   }
 
-  async function deletePermission(row) {
-    await request('Delete permission', `/api/permissions/roles/${roleId}/function/${row.function}/command/${row.command}`, {
-      identity: true,
-      method: 'DELETE',
-    })
-    await loadPermissions()
+  function openAuthSheet() {
+    setSheet('auth')
   }
 
-  async function loadProducts() {
-    setProducts(await request('Products', '/products'))
+  async function copyToken() {
+    if (!token) return
+    await navigator.clipboard.writeText(token)
+    notify('Token copied', 'success')
+  }
+
+  async function loadProductByNo(productNo) {
+    try {
+      const data = await request({
+        service: 'catalog',
+        path: `/products/get-product-by-no/${encodeURIComponent(productNo)}`,
+        label: 'Find product',
+      })
+      const product = normalizeProduct(data)
+      if (product?.no) {
+        setSelectedProductNo(product.no)
+        setProductDraft({
+          id: String(product.id || ''),
+          no: product.no || '',
+          name: product.name || '',
+          summary: product.summary || '',
+          description: product.description || '',
+          price: String(product.price ?? '0'),
+        })
+        setView('admin')
+        setAdminTab('catalog')
+        setSheet('product')
+      }
+      return product
+    } catch (error) {
+      notify(error.message, 'error')
+      return null
+    }
   }
 
   async function createProduct() {
-    const payload = { ...productForm, price: Number(productForm.price) }
-    const data = await request('Create product', '/products', { method: 'POST', body: payload })
-    setSelectedProduct(data)
-    await loadProducts()
+    if (!requireAuth()) return
+    try {
+      const payload = {
+        no: productDraft.no.trim(),
+        name: productDraft.name.trim(),
+        summary: productDraft.summary.trim(),
+        description: productDraft.description.trim(),
+        price: Number(productDraft.price || 0),
+      }
+      const data = await request({
+        service: 'catalog',
+        path: '/products',
+        method: 'POST',
+        body: payload,
+        label: 'Create product',
+      })
+      const created = normalizeProduct(data)
+      if (created?.no) {
+        setProducts((current) => [created, ...current.filter((item) => item.id !== created.id)])
+        setSelectedProductNo(created.no)
+        setProductDraft({
+          id: String(created.id || ''),
+          no: created.no || '',
+          name: created.name || '',
+          summary: created.summary || '',
+          description: created.description || '',
+          price: String(created.price ?? '0'),
+        })
+      }
+      notify('Product created', 'success')
+      await loadProducts()
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function updateProduct() {
-    if (!selectedProduct?.id) return
-    const payload = {
-      name: productForm.name,
-      summary: productForm.summary,
-      description: productForm.description,
-      price: productForm.price,
+    const target = products.find((item) => String(item.id) === String(productDraft.id) || item.no === productDraft.no)
+    if (!target?.id) {
+      notify('Select a product first', 'warning')
+      return
     }
-    const data = await request('Update product', `/products/${selectedProduct.id}`, {
-      method: 'PUT',
-      body: { ...payload, price: Number(payload.price) },
-    })
-    setSelectedProduct(data)
-    await loadProducts()
+
+    try {
+      const payload = {
+        name: productDraft.name.trim(),
+        summary: productDraft.summary.trim(),
+        description: productDraft.description.trim(),
+        price: Number(productDraft.price || 0),
+      }
+      const data = await request({
+        service: 'catalog',
+        path: `/products/${target.id}`,
+        method: 'PUT',
+        body: payload,
+        label: 'Update product',
+      })
+      const updated = normalizeProduct(data)
+      if (updated?.id) {
+        setProducts((current) => current.map((item) => (item.id === updated.id ? updated : item)))
+        setSelectedProductNo(updated.no || target.no)
+      }
+      notify('Product updated', 'success')
+      await loadProducts()
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  async function findProductByNo() {
-    const data = await request('Product by no', `/products/get-product-by-no/${productNoSearch}`)
-    setSelectedProduct(data)
-    setProductForm({
-      no: data.no || '',
-      name: data.name || '',
-      summary: data.summary || '',
-      description: data.description || '',
-      price: data.price || 0,
-    })
+  async function deleteProduct(targetProduct = null) {
+    const target =
+      targetProduct ||
+      products.find((item) => String(item.id) === String(productDraft.id) || item.no === productDraft.no)
+    if (!target?.id) {
+      notify('Select a product first', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'catalog',
+        path: `/products/${target.id}`,
+        method: 'DELETE',
+        label: 'Delete product',
+      })
+      setProducts((current) => current.filter((item) => item.id !== target.id))
+      if (selectedProductNo === target.no) setSelectedProductNo('')
+      setProductDraft(DEFAULT_PRODUCT_FORM)
+      notify('Product deleted', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  async function deleteProduct(id) {
-    await request('Delete product', `/products/${id}`, { method: 'DELETE' })
-    if (selectedProduct?.id === id) setSelectedProduct(null)
-    await loadProducts()
+  async function addToBasket(product, quantity = 1) {
+    if (!requireAuth()) return
+    const itemQuantity = Math.max(1, Number(quantity || 1))
+    const currentBasket = basket || createEmptyBasket(activeUserName, checkoutForm.emailAddress)
+    const nextItems = [...(currentBasket.items || [])]
+    const existing = nextItems.find((item) => item.itemNo === product.no)
+    if (existing) {
+      existing.quantity += itemQuantity
+      existing.itemPrice = Number(product.price || existing.itemPrice || 0)
+      existing.itemName = product.name || existing.itemName
+    } else {
+      nextItems.push({
+        quantity: itemQuantity,
+        itemPrice: Number(product.price || 0),
+        itemNo: product.no,
+        itemName: product.name,
+      })
+    }
+
+    const nextBasket = {
+      username: activeUserName,
+      emailAddress: checkoutForm.emailAddress || customer?.emailAddress || account?.email || currentBasket.emailAddress,
+      items: nextItems,
+    }
+
+    try {
+      const data = await request({
+        service: 'basket',
+        path: '/baskets',
+        method: 'POST',
+        body: nextBasket,
+        label: 'Save basket',
+      })
+      const saved = normalizeBasket(data)
+      setBasket(saved)
+      setView('cart')
+      notify(`${product.name} added to cart`, 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  async function loadInventory() {
-    setInventoryRows(await request('Inventory list', `/inventory/items/${inventoryForm.itemNo}`, { auth: false }))
-  }
+  async function updateBasketItem(itemNo, nextQuantity) {
+    if (!requireAuth()) return
+    const currentBasket = basket || createEmptyBasket(activeUserName, checkoutForm.emailAddress)
+    const updatedItems = (currentBasket.items || [])
+      .map((item) =>
+        item.itemNo === itemNo
+          ? {
+              ...item,
+              quantity: Math.max(1, Number(nextQuantity)),
+            }
+          : item,
+      )
+      .filter((item) => item.quantity > 0)
 
-  async function purchaseInventory() {
-    const data = await request('Purchase inventory', `/inventory/purchase/${inventoryForm.itemNo}`, {
-      method: 'POST',
-      body: { quantity: Number(inventoryForm.quantity) },
-    })
-    setInventoryId(data.id || '')
-    await loadInventory()
-  }
-
-  async function saleInventory() {
-    const data = await request('Sale inventory', `/inventory/sales/${inventoryForm.itemNo}`, {
-      method: 'POST',
-      body: { externalDocNo: inventoryForm.externalDocNo, quantity: Number(inventoryForm.quantity) },
-    })
-    setInventoryId(data.id || '')
-    await loadInventory()
-  }
-
-  async function saleOrderInventory() {
-    await request('Sale order inventory', `/inventory/sales/order-no/${documentNo || `ORD-${Date.now()}`}`, {
-      method: 'POST',
-      body: { saleItems: [{ itemNo: inventoryForm.itemNo, quantity: Number(inventoryForm.quantity) }] },
-    })
-    await loadInventory()
-  }
-
-  async function deleteInventoryEntry(id = inventoryId) {
-    if (!id) return
-    await request('Delete inventory', `/inventory/${id}`, { method: 'DELETE' })
-    setInventoryId('')
-    await loadInventory()
-  }
-
-  async function getBasket() {
-    setBasket(await request('Get basket', `/baskets/${basketForm.username}`))
-  }
-
-  async function updateBasket() {
-    const body = {
-      username: basketForm.username,
-      emailAddress: basketForm.emailAddress,
-      items: [
-        {
-          quantity: Number(basketForm.quantity),
-          itemPrice: Number(basketForm.itemPrice),
-          itemNo: basketForm.itemNo,
-          itemName: basketForm.itemName,
+    try {
+      const data = await request({
+        service: 'basket',
+        path: '/baskets',
+        method: 'POST',
+        body: {
+          username: activeUserName,
+          emailAddress: currentBasket.emailAddress || checkoutForm.emailAddress || customer?.emailAddress || account?.email || '',
+          items: updatedItems,
         },
-      ],
+        label: 'Update basket',
+      })
+      setBasket(normalizeBasket(data))
+      notify('Basket updated', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
     }
-    setBasket(await request('Update basket', '/baskets', { method: 'POST', body }))
+  }
+
+  async function removeBasketItem(itemNo) {
+    if (!requireAuth()) return
+    const currentBasket = basket || createEmptyBasket(activeUserName, checkoutForm.emailAddress)
+    const updatedItems = (currentBasket.items || []).filter((item) => item.itemNo !== itemNo)
+
+    try {
+      const data = await request({
+        service: 'basket',
+        path: '/baskets',
+        method: 'POST',
+        body: {
+          username: activeUserName,
+          emailAddress: currentBasket.emailAddress || checkoutForm.emailAddress || customer?.emailAddress || account?.email || '',
+          items: updatedItems,
+        },
+        label: 'Remove basket item',
+      })
+      setBasket(normalizeBasket(data))
+      notify('Item removed', 'info')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function clearBasket() {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'basket',
+        path: `/baskets/${encodeURIComponent(activeUserName)}`,
+        method: 'DELETE',
+        label: 'Clear basket',
+      })
+      setBasket(createEmptyBasket(activeUserName, checkoutForm.emailAddress))
+      notify('Basket cleared', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function checkoutBasket() {
-    await request('Checkout basket', '/baskets/checkout', {
-      method: 'POST',
-      body: {
-        userName: basketForm.username,
-        firstName: 'customer1',
-        lastName: 'customer',
-        emailAddress: basketForm.emailAddress,
-        shippingAddress: 'Wollongong',
-        invoiceAddress: 'Australia',
-      },
-    })
-    setBasket(null)
+    if (!requireAuth()) return
+    if (!basket?.items?.length) {
+      notify('Cart is empty', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'basket',
+        path: '/baskets/checkout',
+        method: 'POST',
+        body: {
+          userName: activeUserName,
+          firstName: checkoutForm.firstName,
+          lastName: checkoutForm.lastName,
+          emailAddress: checkoutForm.emailAddress,
+          shippingAddress: checkoutForm.shippingAddress,
+          invoiceAddress: checkoutForm.invoiceAddress,
+        },
+        label: 'Checkout basket',
+      })
+      setBasket(createEmptyBasket(activeUserName, checkoutForm.emailAddress))
+      notify('Checkout submitted', 'success')
+      window.setTimeout(() => {
+        void loadOrders(activeUserName)
+      }, 1200)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  async function deleteBasket() {
-    await request('Delete basket', `/baskets/${basketForm.username}`, { method: 'DELETE' })
-    setBasket(null)
-  }
-
-  async function loadOrders() {
-    const data = await request('Orders by user', `/v1/orders/${orderForm.userName}`)
-    setOrderRows(data.data || data)
+  async function loadOrderById(id = selectedOrderId) {
+    if (!id) return null
+    try {
+      const data = await request({
+        service: 'orders',
+        path: `/v1/orders/by-id/${encodeURIComponent(id)}`,
+        label: 'Load order detail',
+      })
+      const order = normalizeOrder(data)
+      setSelectedOrder(order)
+      setSelectedOrderId(String(order?.id || id))
+      return order
+    } catch (error) {
+      notify(error.message, 'error')
+      return null
+    }
   }
 
   async function createOrder() {
-    const data = await request('Create order', '/v1/orders', {
-      method: 'POST',
-      body: getOrderPayload(orderForm, true),
-    })
-    setOrderId(String(data.data || ''))
-    await loadOrders()
-  }
-
-  async function getOrderById() {
-    if (!orderId) return
-    const data = await request('Order by id', `/v1/orders/by-id/${orderId}`)
-    const order = data.data || data
-    setDocumentNo(order.documentNo || '')
-    setOrderRows([order])
+    if (!requireAuth()) return
+    try {
+      const payload = {
+        userName: orderAdminForm.userName,
+        totalPrice: Number(orderAdminForm.totalPrice || 0),
+        firstName: orderAdminForm.firstName,
+        lastName: orderAdminForm.lastName,
+        emailAddress: orderAdminForm.emailAddress,
+        shippingAddress: orderAdminForm.shippingAddress,
+        invoiceAddress: orderAdminForm.invoiceAddress,
+      }
+      const data = await request({
+        service: 'orders',
+        path: '/v1/orders',
+        method: 'POST',
+        body: payload,
+        label: 'Create order',
+      })
+      const created = normalizeOrderCreate(data)
+      setOrderAdminId(String(created || ''))
+      notify('Order created', 'success')
+      await loadAdminOrders(orderAdminUser)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function updateOrder() {
-    if (!orderId) return
-    await request('Update order', `/v1/orders/${orderId}`, {
-      method: 'PUT',
-      body: getOrderPayload(orderForm, false),
-    })
-    await getOrderById()
+    if (!requireAuth()) return
+    const id = orderAdminId || orderAdminForm.id
+    if (!id) {
+      notify('Order id is required', 'warning')
+      return
+    }
+
+    try {
+      const payload = {
+        totalPrice: Number(orderAdminForm.totalPrice || 0),
+        firstName: orderAdminForm.firstName,
+        lastName: orderAdminForm.lastName,
+        emailAddress: orderAdminForm.emailAddress,
+        shippingAddress: orderAdminForm.shippingAddress,
+        invoiceAddress: orderAdminForm.invoiceAddress,
+      }
+      const data = await request({
+        service: 'orders',
+        path: `/v1/orders/${encodeURIComponent(id)}`,
+        method: 'PUT',
+        body: payload,
+        label: 'Update order',
+      })
+      const updated = normalizeOrder(data)
+      if (updated?.id) {
+        setSelectedOrder(updated)
+        setSelectedOrderId(String(updated.id))
+      }
+      notify('Order updated', 'success')
+      await loadAdminOrders(orderAdminUser)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function deleteOrderById() {
-    if (!orderId) return
-    await request('Delete order', `/v1/orders/${orderId}`, { method: 'DELETE' })
-    setOrderId('')
-    await loadOrders()
+    if (!requireAuth()) return
+    const id = orderAdminId || orderAdminForm.id || selectedOrderId
+    if (!id) {
+      notify('Order id is required', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'orders',
+        path: `/v1/orders/${encodeURIComponent(id)}`,
+        method: 'DELETE',
+        label: 'Delete order',
+      })
+      setSelectedOrder(null)
+      setSelectedOrderId('')
+      setOrderAdminId('')
+      notify('Order deleted', 'success')
+      await loadAdminOrders(orderAdminUser)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function deleteOrderByDocument() {
-    if (!documentNo) return
-    await request('Delete order document', `/v1/orders/document-no/${documentNo}`, { method: 'DELETE' })
-    setDocumentNo('')
-    await loadOrders()
+    if (!requireAuth()) return
+    const documentNo = orderAdminDocumentNo || selectedOrder?.documentNo
+    if (!documentNo) {
+      notify('Document no is required', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'orders',
+        path: `/v1/orders/document-no/${encodeURIComponent(documentNo)}`,
+        method: 'DELETE',
+        label: 'Delete order document',
+      })
+      setOrderAdminDocumentNo('')
+      notify('Order deleted by document no', 'success')
+      await loadAdminOrders(orderAdminUser)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  async function loadCustomer() {
-    const data = await request('Customer', `/customers/${customerName}`)
-    setCustomer(data.value || data)
+  async function addPermission() {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'identity',
+        path: `/api/permissions/roles/${encodeURIComponent(roleId)}`,
+        method: 'POST',
+        body: {
+          function: permissionForm.function,
+          command: permissionForm.command,
+        },
+        label: 'Add permission',
+      })
+      await loadPermissions(roleId)
+      notify('Permission added', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function deletePermission(permission) {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'identity',
+        path: `/api/permissions/roles/${encodeURIComponent(roleId)}/function/${encodeURIComponent(permission.function)}/command/${encodeURIComponent(permission.command)}`,
+        method: 'DELETE',
+        label: 'Delete permission',
+      })
+      await loadPermissions(roleId)
+      notify('Permission deleted', 'info')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function syncPermissions() {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'identity',
+        path: `/api/permissions/roles/${encodeURIComponent(roleId)}/update-permissions`,
+        method: 'POST',
+        body: permissions.map((permission) => ({
+          function: permission.function,
+          command: permission.command,
+        })),
+        label: 'Sync permissions',
+      })
+      await loadPermissions(roleId)
+      notify('Permissions synced', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function purchaseInventory() {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'inventory',
+        path: `/inventory/purchase/${encodeURIComponent(inventoryForm.itemNo)}`,
+        method: 'POST',
+        body: {
+          quantity: Number(inventoryForm.quantity || 0),
+        },
+        label: 'Purchase inventory',
+      })
+      await loadInventoryHistory(inventoryForm.itemNo)
+      await ensureStock(inventoryForm.itemNo)
+      notify('Inventory purchased', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function saleInventory() {
+    if (!requireAuth()) return
+    try {
+      await request({
+        service: 'inventory',
+        path: `/inventory/sales/${encodeURIComponent(inventoryForm.itemNo)}`,
+        method: 'POST',
+        body: {
+          externalDocNo: inventoryForm.externalDocNo,
+          quantity: Number(inventoryForm.quantity || 0),
+        },
+        label: 'Sale inventory',
+      })
+      await loadInventoryHistory(inventoryForm.itemNo)
+      await ensureStock(inventoryForm.itemNo)
+      notify('Inventory sale recorded', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function saleOrderInventory() {
+    if (!requireAuth()) return
+    try {
+      const data = await request({
+        service: 'inventory',
+        path: `/inventory/sales/order-no/${encodeURIComponent(inventoryForm.saleOrderNo || `ORD-${Date.now()}`)}`,
+        method: 'POST',
+        body: {
+          saleItems: [
+            {
+              itemNo: inventoryForm.itemNo,
+              quantity: Number(inventoryForm.quantity || 0),
+            },
+          ],
+        },
+        label: 'Sale order inventory',
+      })
+      const docNo = data?.docNo || data?.DocNo || data?.data || ''
+      notify(docNo ? `Order stock posted: ${docNo}` : 'Order stock posted', 'success')
+      await loadInventoryHistory(inventoryForm.itemNo)
+      await ensureStock(inventoryForm.itemNo)
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function deleteInventoryEntry() {
+    if (!requireAuth()) return
+    const id = inventoryDeleteId.trim()
+    if (!id) {
+      notify('Inventory id is required', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'inventory',
+        path: `/inventory/${encodeURIComponent(id)}`,
+        method: 'DELETE',
+        label: 'Delete inventory entry',
+      })
+      setInventoryDeleteId('')
+      await loadInventoryHistory(inventoryForm.itemNo)
+      await ensureStock(inventoryForm.itemNo)
+      notify('Inventory entry deleted', 'info')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
+  }
+
+  async function loadJobPreview() {
+    if (!requireAuth()) return
+    try {
+      const data = await request({
+        service: 'basket',
+        path: '/baskets/email',
+        method: 'POST',
+        body: {},
+        label: 'Load email preview',
+      })
+      setEmailPreview(typeof data === 'string' ? data : JSON.stringify(data, null, 2))
+      notify('Email template loaded', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function sendEmailJob() {
-    const data = await request('Schedule email', '/schedule-job/send-email', { method: 'POST', body: emailJob })
-    setJobId(String(data))
+    if (!requireAuth()) return
+    try {
+      const data = await request({
+        service: 'jobs',
+        path: '/schedule-job/send-email',
+        method: 'POST',
+        body: {
+          email: jobForm.email,
+          subject: jobForm.subject,
+          content: jobForm.content,
+          enqueue: new Date(jobForm.enqueue).toISOString(),
+        },
+        label: 'Schedule email job',
+      })
+      setJobId(String(data || ''))
+      notify('Email job scheduled', 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function deleteJob() {
-    const data = await request('Delete job', `/schedule-job/delete/jobId/${jobId || 'not-a-real-job'}`, { method: 'DELETE' })
-    addLog({ name: 'Delete job result', method: 'RESULT', url: jobId || 'not-a-real-job', status: data ? 200 : 404, ok: true })
+    if (!requireAuth()) return
+    if (!jobId) {
+      notify('Job id is required', 'warning')
+      return
+    }
+
+    try {
+      await request({
+        service: 'jobs',
+        path: `/schedule-job/delete/jobId/${encodeURIComponent(jobId)}`,
+        method: 'DELETE',
+        label: 'Delete job',
+      })
+      notify('Job delete request sent', 'info')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
   async function runWelcome(action) {
-    await request(`Job ${action}`, `/welcome/${action}`, { method: 'POST', body: {} })
+    if (!requireAuth()) return
+    try {
+      const data = await request({
+        service: 'jobs',
+        path: `/welcome/${encodeURIComponent(action)}`,
+        method: 'POST',
+        body: {},
+        label: `Run ${action}`,
+      })
+      notify(typeof data === 'string' ? data : `Job queued: ${action}`, 'success')
+    } catch (error) {
+      notify(error.message, 'error')
+    }
   }
 
-  const activeLabel = navItems.find((item) => item.id === active)?.label || 'Overview'
+  async function openAdminOrder(order) {
+    setView('admin')
+    setAdminTab('orders')
+    if (order) {
+      setOrderAdminId(String(order.id || ''))
+      setOrderAdminDocumentNo(order.documentNo || '')
+      setOrderAdminUser(order.userName || orderAdminUser)
+      setOrderAdminForm({
+        id: String(order.id || ''),
+        userName: order.userName || orderAdminUser,
+        totalPrice: String(order.totalPrice ?? '0'),
+        firstName: order.firstName || '',
+        lastName: order.lastName || '',
+        emailAddress: order.emailAddress || '',
+        shippingAddress: order.shippingAddress || '',
+        invoiceAddress: order.invoiceAddress || '',
+      })
+      await loadAdminOrders(order.userName || orderAdminUser)
+    } else {
+      await loadAdminOrders(orderAdminUser)
+    }
+  }
+
+  async function saveAccountToken() {
+    await copyToken()
+  }
+
+  const displayProducts = useMemo(() => {
+    const query = productQuery.trim().toLowerCase()
+    const filtered = products.filter((product) => {
+      if (!query) return true
+      return [product.no, product.name, product.summary, product.description]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(query))
+    })
+
+    const sorted = [...filtered]
+    sorted.sort((left, right) => {
+      const leftStock = stockCache[left.no]?.total ?? -1
+      const rightStock = stockCache[right.no]?.total ?? -1
+
+      if (sortMode === 'name') return String(left.name || '').localeCompare(String(right.name || ''))
+      if (sortMode === 'price-asc') return Number(left.price || 0) - Number(right.price || 0)
+      if (sortMode === 'price-desc') return Number(right.price || 0) - Number(left.price || 0)
+      if (sortMode === 'stock') return rightStock - leftStock
+      return rightStock - leftStock || Number(right.price || 0) - Number(left.price || 0) || String(left.name || '').localeCompare(String(right.name || ''))
+    })
+
+    return sorted
+  }, [products, productQuery, sortMode, stockCache])
+
+  const visibleProducts = useMemo(() => displayProducts.slice(0, displayCount), [displayProducts, displayCount])
+  const selectedProductRows = selectedProductStock?.entries || []
+  const quickMetrics = [
+    { label: 'Catalog', value: formatNumber(productCount) },
+    { label: 'Basket items', value: formatNumber(cartCount) },
+    { label: 'Orders', value: formatNumber(orderCount) },
+    { label: 'Permissions', value: formatNumber(permissions.length) },
+    { label: 'Stock total', value: formatNumber(totalInventoryMoves) },
+  ]
+
+  const store = {
+    token,
+    tokenClaims,
+    authForm,
+    setAuthForm,
+    busy,
+    alerts,
+    account,
+    customer,
+    permissions,
+    roleId,
+    setRoleId,
+    view,
+    setView,
+    adminTab,
+    setAdminTab,
+    sheet,
+    setSheet,
+    sheetQty,
+    setSheetQty,
+    activeUserName,
+    activeDisplayName,
+    productCount,
+    cartCount,
+    orderCount,
+    totalInventoryMoves,
+    quickMetrics,
+    products,
+    stockCache,
+    productQuery,
+    setProductQuery,
+    sortMode,
+    setSortMode,
+    displayCount,
+    setDisplayCount,
+    displayProducts,
+    visibleProducts,
+    selectedProductNo,
+    setSelectedProductNo,
+    selectedProduct,
+    selectedProductStock,
+    selectedProductRows,
+    productDraft,
+    setProductDraft,
+    basket,
+    checkoutForm,
+    setCheckoutForm,
+    orders,
+    selectedOrderId,
+    setSelectedOrderId,
+    selectedOrder,
+    orderAdminUser,
+    setOrderAdminUser,
+    orderAdminForm,
+    setOrderAdminForm,
+    orderAdminId,
+    setOrderAdminId,
+    orderAdminDocumentNo,
+    setOrderAdminDocumentNo,
+    adminOrders,
+    inventoryForm,
+    setInventoryForm,
+    inventoryRows,
+    inventoryPageRows,
+    inventoryDeleteId,
+    setInventoryDeleteId,
+    permissionForm,
+    setPermissionForm,
+    jobForm,
+    setJobForm,
+    jobId,
+    setJobId,
+    emailPreview,
+    can,
+    notify,
+    requireAuth,
+    request,
+    loadAccount,
+    loadCustomerProfile,
+    loadPermissions,
+    loadProducts,
+    loadBasket,
+    loadOrders,
+    loadAdminOrders,
+    loadInventoryHistory,
+    loadInventoryPage,
+    ensureStock,
+    login,
+    logout,
+    refreshStorefront,
+    navigateView,
+    openProduct,
+    openAccountSheet,
+    openAuthSheet,
+    copyToken,
+    loadProductByNo,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    addToBasket,
+    updateBasketItem,
+    removeBasketItem,
+    clearBasket,
+    checkoutBasket,
+    loadOrderById,
+    createOrder,
+    updateOrder,
+    deleteOrderById,
+    deleteOrderByDocument,
+    addPermission,
+    deletePermission,
+    syncPermissions,
+    purchaseInventory,
+    saleInventory,
+    saleOrderInventory,
+    deleteInventoryEntry,
+    loadJobPreview,
+    sendEmailJob,
+    deleteJob,
+    runWelcome,
+    openAdminOrder,
+    saveAccountToken,
+  }
 
   return (
-    <div className="shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <Database size={24} />
-          <div>
-            <strong>Microservices</strong>
-            <span>{authStatus}</span>
-          </div>
-        </div>
-        <nav>
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <button key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}>
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-      </aside>
-
-      <main>
-        <header className="topbar">
-          <div>
-            <h1>{activeLabel}</h1>
-            <span>{GATEWAY_URL}</span>
-          </div>
-          <div className="topActions">
-            {busy && (
-              <span className="busy">
-                <Loader2 size={16} className="spin" /> {busy}
-              </span>
-            )}
-            <button onClick={() => window.open(`${GATEWAY_URL}/swagger`, '_blank')}>Swagger</button>
-            <button onClick={logout}>
-              <Lock size={16} /> Logout
-            </button>
-          </div>
-        </header>
-
-        {active === 'overview' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <CheckCircle2 size={18} />
-                <h2>Stack</h2>
-              </div>
-              <div className="statGrid">
-                <div><span>Identity</span><strong>{IDENTITY_URL}</strong></div>
-                <div><span>Gateway</span><strong>{GATEWAY_URL}</strong></div>
-                <div><span>User</span><strong>{account?.userName || credentials.username}</strong></div>
-                <div><span>Role</span><strong>Administrator</strong></div>
-              </div>
-              <div className="buttonRow">
-                <button onClick={loadProducts}><RefreshCcw size={16} /> Products</button>
-                <button onClick={loadInventory}><RefreshCcw size={16} /> Inventory</button>
-                <button onClick={loadOrders}><RefreshCcw size={16} /> Orders</button>
-              </div>
-            </div>
-            <div className="panel">
-              <div className="panelTitle">
-                <ClipboardList size={18} />
-                <h2>Request Log</h2>
-              </div>
-              <LogList logs={logs} />
-            </div>
-          </section>
-        )}
-
-        {active === 'identity' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <KeyRound size={18} />
-                <h2>Token</h2>
-              </div>
-              <div className="formGrid">
-                <Field label="Username" value={credentials.username} onChange={(v) => setCredentials({ ...credentials, username: v })} />
-                <Field label="Password" type="password" value={credentials.password} onChange={(v) => setCredentials({ ...credentials, password: v })} />
-                <Field label="Client id" value={credentials.clientId} onChange={(v) => setCredentials({ ...credentials, clientId: v })} />
-                <Field label="Client secret" type="password" value={credentials.clientSecret} onChange={(v) => setCredentials({ ...credentials, clientSecret: v })} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={login}><KeyRound size={16} /> Login</button>
-                <button onClick={loadAccount}><User size={16} /> Account</button>
-              </div>
-              <JsonBlock value={account} />
-            </div>
-            <div className="panel">
-              <div className="panelTitle">
-                <ShieldCheck size={18} />
-                <h2>Permissions</h2>
-              </div>
-              <div className="formGrid">
-                <Field label="Role id" value={roleId} onChange={setRoleId} />
-                <Field label="Function" value={permissionForm.function} onChange={(v) => setPermissionForm({ ...permissionForm, function: v })} />
-                <Field label="Command" value={permissionForm.command} onChange={(v) => setPermissionForm({ ...permissionForm, command: v })} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={loadPermissions}><RefreshCcw size={16} /> Load</button>
-                <button onClick={addPermission}><Send size={16} /> Add</button>
-              </div>
-              <DataTable
-                rows={permissions}
-                columns={[
-                  { key: 'function', label: 'Function' },
-                  { key: 'command', label: 'Command' },
-                  { key: 'actions', label: '', render: (row) => <button className="iconBtn" onClick={() => deletePermission(row)}><Trash2 size={15} /></button> },
-                ]}
-              />
-            </div>
-          </section>
-        )}
-
-        {active === 'products' && (
-          <section className="contentGrid">
-            <div className="panel widePanel">
-              <div className="panelTitle">
-                <Package size={18} />
-                <h2>Catalog</h2>
-              </div>
-              <div className="buttonRow">
-                <button onClick={loadProducts}><RefreshCcw size={16} /> Load</button>
-                <input value={productNoSearch} onChange={(e) => setProductNoSearch(e.target.value)} />
-                <button onClick={findProductByNo}><Search size={16} /> Find no</button>
-              </div>
-              <DataTable
-                rows={products}
-                columns={[
-                  { key: 'id', label: 'Id' },
-                  { key: 'no', label: 'No' },
-                  { key: 'name', label: 'Name' },
-                  { key: 'price', label: 'Price' },
-                  { key: 'actions', label: '', render: (row) => <button className="iconBtn" onClick={() => deleteProduct(row.id)}><Trash2 size={15} /></button> },
-                ]}
-              />
-            </div>
-            <div className="panel">
-              <div className="panelTitle">
-                <Send size={18} />
-                <h2>Product Form</h2>
-              </div>
-              <ProductForm form={productForm} setForm={setProductForm} />
-              <div className="buttonRow">
-                <button onClick={createProduct}><Send size={16} /> Create</button>
-                <button onClick={updateProduct}><RefreshCcw size={16} /> Update</button>
-              </div>
-              <JsonBlock value={selectedProduct} />
-            </div>
-          </section>
-        )}
-
-        {active === 'inventory' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <Boxes size={18} />
-                <h2>Inventory</h2>
-              </div>
-              <div className="formGrid">
-                <Field label="Item no" value={inventoryForm.itemNo} onChange={(v) => setInventoryForm({ ...inventoryForm, itemNo: v })} />
-                <Field label="Quantity" type="number" value={inventoryForm.quantity} onChange={(v) => setInventoryForm({ ...inventoryForm, quantity: v })} />
-                <Field label="External doc" value={inventoryForm.externalDocNo} onChange={(v) => setInventoryForm({ ...inventoryForm, externalDocNo: v })} />
-                <Field label="Entry id" value={inventoryId} onChange={setInventoryId} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={loadInventory}><RefreshCcw size={16} /> Load</button>
-                <button onClick={purchaseInventory}><Send size={16} /> Purchase</button>
-                <button onClick={saleInventory}><Send size={16} /> Sale</button>
-                <button onClick={saleOrderInventory}><Send size={16} /> Sale order</button>
-                <button onClick={() => deleteInventoryEntry()}><Trash2 size={16} /> Delete</button>
-              </div>
-            </div>
-            <div className="panel widePanel">
-              <DataTable
-                rows={inventoryRows}
-                columns={[
-                  { key: 'id', label: 'Id' },
-                  { key: 'itemNo', label: 'Item' },
-                  { key: 'quantity', label: 'Qty' },
-                  { key: 'documentType', label: 'Type' },
-                  { key: 'actions', label: '', render: (row) => <button className="iconBtn" onClick={() => deleteInventoryEntry(row.id)}><Trash2 size={15} /></button> },
-                ]}
-              />
-            </div>
-          </section>
-        )}
-
-        {active === 'basket' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <ShoppingBasket size={18} />
-                <h2>Basket</h2>
-              </div>
-              <div className="formGrid">
-                <Field label="Username" value={basketForm.username} onChange={(v) => setBasketForm({ ...basketForm, username: v })} />
-                <Field label="Email" value={basketForm.emailAddress} onChange={(v) => setBasketForm({ ...basketForm, emailAddress: v })} />
-                <Field label="Item no" value={basketForm.itemNo} onChange={(v) => setBasketForm({ ...basketForm, itemNo: v })} />
-                <Field label="Item name" value={basketForm.itemName} onChange={(v) => setBasketForm({ ...basketForm, itemName: v })} />
-                <Field label="Quantity" type="number" value={basketForm.quantity} onChange={(v) => setBasketForm({ ...basketForm, quantity: v })} />
-                <Field label="Price" type="number" value={basketForm.itemPrice} onChange={(v) => setBasketForm({ ...basketForm, itemPrice: v })} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={getBasket}><RefreshCcw size={16} /> Get</button>
-                <button onClick={updateBasket}><Send size={16} /> Save</button>
-                <button onClick={checkoutBasket}><CheckCircle2 size={16} /> Checkout</button>
-                <button onClick={deleteBasket}><Trash2 size={16} /> Delete</button>
-                <button onClick={() => request('Basket email', '/baskets/email', { method: 'POST', body: {} })}><Mail size={16} /> Template</button>
-              </div>
-            </div>
-            <div className="panel">
-              <JsonBlock value={basket} />
-            </div>
-          </section>
-        )}
-
-        {active === 'orders' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <ClipboardList size={18} />
-                <h2>Order Form</h2>
-              </div>
-              <OrderForm form={orderForm} setForm={setOrderForm} />
-              <div className="formGrid">
-                <Field label="Order id" value={orderId} onChange={setOrderId} />
-                <Field label="Document no" value={documentNo} onChange={setDocumentNo} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={loadOrders}><RefreshCcw size={16} /> List</button>
-                <button onClick={createOrder}><Send size={16} /> Create</button>
-                <button onClick={getOrderById}><Search size={16} /> By id</button>
-                <button onClick={updateOrder}><RefreshCcw size={16} /> Update</button>
-                <button onClick={deleteOrderById}><Trash2 size={16} /> Delete id</button>
-                <button onClick={deleteOrderByDocument}><Trash2 size={16} /> Delete doc</button>
-              </div>
-            </div>
-            <div className="panel widePanel">
-              <DataTable
-                rows={orderRows}
-                columns={[
-                  { key: 'id', label: 'Id' },
-                  { key: 'documentNo', label: 'Document' },
-                  { key: 'userName', label: 'User' },
-                  { key: 'totalPrice', label: 'Total' },
-                  { key: 'status', label: 'Status' },
-                ]}
-              />
-            </div>
-          </section>
-        )}
-
-        {active === 'customers' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <Users size={18} />
-                <h2>Customer</h2>
-              </div>
-              <div className="buttonRow">
-                <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-                <button onClick={loadCustomer}><Search size={16} /> Load</button>
-              </div>
-              <JsonBlock value={customer} />
-            </div>
-          </section>
-        )}
-
-        {active === 'jobs' && (
-          <section className="contentGrid">
-            <div className="panel">
-              <div className="panelTitle">
-                <Mail size={18} />
-                <h2>Schedule Email</h2>
-              </div>
-              <div className="formGrid">
-                <Field label="Email" value={emailJob.email} onChange={(v) => setEmailJob({ ...emailJob, email: v })} />
-                <Field label="Subject" value={emailJob.subject} onChange={(v) => setEmailJob({ ...emailJob, subject: v })} />
-                <Field label="Enqueue" value={emailJob.enqueue} onChange={(v) => setEmailJob({ ...emailJob, enqueue: v })} />
-                <Field label="Job id" value={jobId} onChange={setJobId} />
-                <TextArea label="Content" value={emailJob.content} onChange={(v) => setEmailJob({ ...emailJob, content: v })} />
-              </div>
-              <div className="buttonRow">
-                <button onClick={sendEmailJob}><Send size={16} /> Schedule</button>
-                <button onClick={deleteJob}><Trash2 size={16} /> Delete</button>
-              </div>
-            </div>
-            <div className="panel">
-              <div className="panelTitle">
-                <Play size={18} />
-                <h2>Welcome Jobs</h2>
-              </div>
-              <div className="buttonGrid">
-                <button onClick={() => runWelcome('welcome')}>Welcome</button>
-                <button onClick={() => runWelcome('delayedwelcome')}>Delayed</button>
-                <button onClick={() => runWelcome('welcomeat')}>At time</button>
-                <button onClick={() => runWelcome('confirmedwelcome')}>Confirmed</button>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
-    </div>
-  )
-}
-
-function ProductForm({ form, setForm }) {
-  return (
-    <div className="formGrid">
-      <Field label="No" value={form.no} onChange={(v) => setForm({ ...form, no: v })} />
-      <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
-      <Field label="Summary" value={form.summary} onChange={(v) => setForm({ ...form, summary: v })} />
-      <Field label="Price" type="number" value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
-      <TextArea label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} />
-    </div>
-  )
-}
-
-function OrderForm({ form, setForm }) {
-  return (
-    <div className="formGrid">
-      <Field label="Username" value={form.userName} onChange={(v) => setForm({ ...form, userName: v })} />
-      <Field label="Total" type="number" value={form.totalPrice} onChange={(v) => setForm({ ...form, totalPrice: v })} />
-      <Field label="First name" value={form.firstName} onChange={(v) => setForm({ ...form, firstName: v })} />
-      <Field label="Last name" value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v })} />
-      <Field label="Email" value={form.emailAddress} onChange={(v) => setForm({ ...form, emailAddress: v })} />
-      <Field label="Shipping" value={form.shippingAddress} onChange={(v) => setForm({ ...form, shippingAddress: v })} />
-      <Field label="Invoice" value={form.invoiceAddress} onChange={(v) => setForm({ ...form, invoiceAddress: v })} />
-    </div>
-  )
-}
-
-function LogList({ logs }) {
-  if (!logs.length) return <div className="empty">No requests</div>
-  return (
-    <div className="logList">
-      {logs.map((log, index) => (
-        <div key={`${log.time}-${index}`} className={log.ok ? 'log ok' : 'log fail'}>
-          <span>{log.time}</span>
-          <strong>{log.status}</strong>
-          <em>{log.method}</em>
-          <p>{log.name}</p>
-        </div>
-      ))}
-    </div>
+    <StorefrontProvider value={store}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<StorefrontLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="shop" element={<ShopPage />} />
+            <Route path="product/:productNo" element={<ProductPage />} />
+            <Route path="cart" element={<CartPage />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="account" element={<AccountPage />} />
+          </Route>
+          <Route element={<MerchantLayout />}>
+            <Route path="studio" element={<StudioOverviewPage />} />
+            <Route path="studio/catalog" element={<StudioCatalogPage />} />
+            <Route path="studio/inventory" element={<StudioInventoryPage />} />
+            <Route path="studio/orders" element={<StudioOrdersPage />} />
+            <Route path="studio/access" element={<StudioAccessPage />} />
+            <Route path="studio/jobs" element={<StudioJobsPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+      <NoticeRail busy={busy} alerts={alerts} />
+    </StorefrontProvider>
   )
 }
 
