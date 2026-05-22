@@ -3,513 +3,365 @@
     "BaseUrl": "http://localhost:5000"
   },
   "Routes": [
-    // Customer api: http://localhost:5003/api/customers
+    // ============ Customer API ============
     {
       "UpstreamPathTemplate": "/customers/{username}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/customers/{username}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5003
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5003 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
       "SwaggerKey": "customer-service"
     },
-    // Product api: http://localhost:5002/api/products
-    {
-      "UpstreamPathTemplate": "/products/{id}",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/api/products/{id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
-      "SwaggerKey": "product-service"
-    },
-    {
-      "UpstreamPathTemplate": "/products/{id}",
-      "UpstreamHttpMethod": ["PUT", "DELETE"],
-      "DownstreamPathTemplate": "/api/products/{id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
-      "SwaggerKey": "product-service"
-    },
+
+    // ============ Product API ============
     {
       "UpstreamPathTemplate": "/products",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/products",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
-      "RateLimitOptions": {
-        "ClientWhitelist": [], // the client in this array will not be affected by the rate limiting
-        "EnableRateLimiting": true,
-        "Period": "10s", // 1s, 5m, 1h, 1d
-        "PeriodTimespan": 10, // retry after a certain number of seconds
-        "Limit": 3 // the maximum number of requests that a client can make in a defined period.
-      },
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5002 } ],
       "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 2, //If the service does not response for 2 seconds, it will throw a timeout exception
+        "ExceptionsAllowedBeforeBreaking": 2,
         "DurationOfBreak": 1000,
-        "TimeoutValue": 5000 //If the service throws a second exception, the service will not be accessible for five seconds
-      },
-      "FileCacheOptions": {
-        "TtlSeconds": 15 //cached seconds
+        "TimeoutValue": 5000
       },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
+      "SwaggerKey": "product-service"
+    },
+    {
+      "UpstreamPathTemplate": "/products/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/products/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5002 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
       "SwaggerKey": "product-service"
     },
     {
       "UpstreamPathTemplate": "/products/get-product-by-no/{productNo}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/products/get-product-by-no/{productNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5002
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5002 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
       "SwaggerKey": "product-service"
     },
-    // Basket api: http://localhost:5004/api/baskets
     {
-      "UpstreamPathTemplate": "/baskets/{username}",
-      "UpstreamHttpMethod": ["GET", "DELETE"],
-      "DownstreamPathTemplate": "/api/baskets/{username}",
+      "UpstreamPathTemplate": "/products",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/products",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5004
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5002 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
+      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
+      "SwaggerKey": "product-service"
+    },
+    {
+      "UpstreamPathTemplate": "/products/{id}",
+      "UpstreamHttpMethod": [ "PUT", "DELETE" ],
+      "DownstreamPathTemplate": "/api/products/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5002 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
+      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
+      "SwaggerKey": "product-service"
+    },
+
+    // ============ Basket API ============
+    {
+      "UpstreamPathTemplate": "/baskets/{username}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/baskets/{username}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5004 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
+      },
+      "SwaggerKey": "basket-service"
+    },
+    {
+      "UpstreamPathTemplate": "/baskets/{username}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "DownstreamPathTemplate": "/api/baskets/{username}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5004 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
       "SwaggerKey": "basket-service"
     },
     {
       "UpstreamPathTemplate": "/baskets",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/baskets",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5004
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5004 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
       "SwaggerKey": "basket-service"
     },
     {
       "UpstreamPathTemplate": "/baskets/checkout",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/baskets/checkout",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5004
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5004 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
       "SwaggerKey": "basket-service"
     },
     {
       "UpstreamPathTemplate": "/baskets/email",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/baskets/email",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5004
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5004 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "basket-service"
     },
-    // Order api: http://localhost:5005/api/{version}/orders
+
+    // ============ Order API ============
     {
       "UpstreamPathTemplate": "/{version}/orders/{username}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/{version}/orders/{username}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5005
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5005 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
       "SwaggerKey": "order-service"
     },
     {
       "UpstreamPathTemplate": "/{version}/orders/by-id/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/{version}/orders/by-id/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5005
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5005 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
+      "RouteClaimsRequirement": { "roles": "Administrator" },
+      "SwaggerKey": "order-service"
+    },
+    {
+      "UpstreamPathTemplate": "/{version}/orders",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/{version}/orders",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5005 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
       "SwaggerKey": "order-service"
     },
     {
       "UpstreamPathTemplate": "/{version}/orders/{id}",
-      "UpstreamHttpMethod": ["PUT", "DELETE"],
+      "UpstreamHttpMethod": [ "PUT", "DELETE" ],
       "DownstreamPathTemplate": "/api/{version}/orders/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5005
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5005 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
-      "SwaggerKey": "order-service"
-    },
-    {
-      "UpstreamPathTemplate": "/{version}/orders",
-      "UpstreamHttpMethod": ["POST"],
-      "DownstreamPathTemplate": "/api/{version}/orders",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5005
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "order-service"
     },
     {
       "UpstreamPathTemplate": "/{version}/orders/document-no/{documentNo}",
-      "UpstreamHttpMethod": ["DELETE"],
+      "UpstreamHttpMethod": [ "DELETE" ],
       "DownstreamPathTemplate": "/api/{version}/orders/document-no/{documentNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5005
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5005 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "order-service"
     },
-    // Inventory API : http://localhost:5006/inventory
+
+    // ============ Inventory API ============
     {
       "UpstreamPathTemplate": "/inventory/items/{itemNo}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/inventory/items/{itemNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "SwaggerKey": "inventory-service"
     },
     {
       "UpstreamPathTemplate": "/inventory/items/{itemNo}/paging",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/inventory/items/{itemNo}/paging",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "SwaggerKey": "inventory-service"
     },
     {
       "UpstreamPathTemplate": "/inventory/{id}",
-      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/inventory/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.read" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
+      "RouteClaimsRequirement": { "roles": "Administrator" },
+      "SwaggerKey": "inventory-service"
+    },
+    {
+      "UpstreamPathTemplate": "/inventory/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "DownstreamPathTemplate": "/api/inventory/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "inventory-service"
     },
     {
       "UpstreamPathTemplate": "/inventory/purchase/{itemNo}",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/inventory/purchase/{itemNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "inventory-service"
     },
     {
       "UpstreamPathTemplate": "/inventory/sales/{itemNo}",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/inventory/sales/{itemNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "inventory-service"
     },
     {
       "UpstreamPathTemplate": "/inventory/sales/order-no/{orderNo}",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/inventory/sales/order-no/{orderNo}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5006
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5006 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "inventory-service"
     },
-    // Hangfire API : http://localhost:5008/api
+
+    // ============ Hangfire API ============
     {
       "UpstreamPathTemplate": "/schedule-job/send-email",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/schedule-job/send-email",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5008
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5008 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "hangfire-service"
     },
     {
       "UpstreamPathTemplate": "/schedule-job/delete/jobId/{id}",
-      "UpstreamHttpMethod": ["DELETE"],
+      "UpstreamHttpMethod": [ "DELETE" ],
       "DownstreamPathTemplate": "/api/schedule-job/delete/jobId/{id}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5008
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5008 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "hangfire-service"
     },
     {
       "UpstreamPathTemplate": "/welcome/{action}",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/welcome/{action}",
       "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5008
-        }
-      ],
+      "DownstreamHostAndPorts": [ { "Host": "localhost", "Port": 5008 } ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
+        "AllowedScopes": [ "tedu_microservices_api.write" ]
       },
-      "RouteClaimsRequirement": {
-        "roles": "Administrator"
-      },
+      "RouteClaimsRequirement": { "roles": "Administrator" },
       "SwaggerKey": "hangfire-service"
     }
   ],
   "SwaggerEndPoints": [
     {
       "Key": "product-service",
-      "Config": [
-        {
-          "Name": "Product API",
-          "Version": "v1",
-          "Url": "http://localhost:5002/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Product API", "Version": "v1", "Url": "http://localhost:5002/swagger/v1/swagger.json" } ]
     },
     {
       "Key": "customer-service",
-      "Config": [
-        {
-          "Name": "Customer API",
-          "Version": "v1",
-          "Url": "http://localhost:5003/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Customer API", "Version": "v1", "Url": "http://localhost:5003/swagger/v1/swagger.json" } ]
     },
     {
       "Key": "basket-service",
-      "Config": [
-        {
-          "Name": "Basket API",
-          "Version": "v1",
-          "Url": "http://localhost:5004/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Basket API", "Version": "v1", "Url": "http://localhost:5004/swagger/v1/swagger.json" } ]
     },
     {
       "Key": "order-service",
-      "Config": [
-        {
-          "Name": "Order API",
-          "Version": "v1",
-          "Url": "http://localhost:5005/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Order API", "Version": "v1", "Url": "http://localhost:5005/swagger/v1/swagger.json" } ]
     },
     {
       "Key": "inventory-service",
-      "Config": [
-        {
-          "Name": "Inventory API",
-          "Version": "v1",
-          "Url": "http://localhost:5006/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Inventory API", "Version": "v1", "Url": "http://localhost:5006/swagger/v1/swagger.json" } ]
     },
     {
       "Key": "hangfire-service",
-      "Config": [
-        {
-          "Name": "Hangfire API",
-          "Version": "v1",
-          "Url": "http://localhost:5008/swagger/v1/swagger.json"
-        }
-      ]
+      "Config": [ { "Name": "Hangfire API", "Version": "v1", "Url": "http://localhost:5008/swagger/v1/swagger.json" } ]
     }
   ]
 }

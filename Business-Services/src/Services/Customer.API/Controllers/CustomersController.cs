@@ -1,7 +1,6 @@
 using Customer.API.Services.Interfaces;
-using Infrastructure.Identity.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Common.Constants;
 
 namespace Customer.API.Controllers;
 
@@ -17,7 +16,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{username}")]
-    [ClaimRequirement(FunctionCode.CUSTOMER, CommandCode.VIEW)]
+    [Authorize]
     public async Task<IActionResult> GetCustomerByUsername(string username)
     {
         var result = await _customerService.GetCustomerByUsernameAsync(username);
