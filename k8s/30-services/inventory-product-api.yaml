@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-product-api
+  namespace: tedu
+  labels:
+    app: inventory-product-api
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-product-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-product-api
+  namespace: tedu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-product-api
+  template:
+    metadata:
+      labels:
+        app: inventory-product-api
+        tier: business
+    spec:
+      containers:
+        - name: inventory-product-api
+          image: inventory-product-api:k8s
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: common-config
+          env:
+            - name: MongoDbSettings__ConnectionString
+              value: "mongodb://inventorydb"
+            - name: MongoDbSettings__DatabaseName
+              value: "InventoryDb"
+            - name: ElasticConfiguration__Username
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: username
+            - name: ElasticConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

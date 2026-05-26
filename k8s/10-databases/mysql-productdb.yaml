@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: productdb
+  namespace: tedu
+  labels:
+    app: productdb
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: productdb
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: productdb
+  namespace: tedu
+spec:
+  serviceName: productdb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productdb
+  template:
+    metadata:
+      labels:
+        app: productdb
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0.29
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: mysql-root-password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command: ["bash", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p$MYSQL_ROOT_PASSWORD"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi

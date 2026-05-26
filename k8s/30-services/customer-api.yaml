@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-api
+  namespace: tedu
+  labels:
+    app: customer-api
+spec:
+  type: ClusterIP
+  selector:
+    app: customer-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-api
+  namespace: tedu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: customer-api
+  template:
+    metadata:
+      labels:
+        app: customer-api
+        tier: business
+    spec:
+      containers:
+        - name: customer-api
+          image: customer-api:k8s
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: common-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: postgres-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: postgres-password
+            - name: DatabaseSettings__ConnectionString
+              value: "Server=customerdb;Port=5432;Database=CustomerDb;User Id=$(DB_USER);Password=$(DB_PASSWORD)"
+            - name: ElasticConfiguration__Username
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: username
+            - name: ElasticConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

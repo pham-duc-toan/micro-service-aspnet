@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hangfire-api
+  namespace: tedu
+  labels:
+    app: hangfire-api
+spec:
+  type: ClusterIP
+  selector:
+    app: hangfire-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hangfire-api
+  namespace: tedu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hangfire-api
+  template:
+    metadata:
+      labels:
+        app: hangfire-api
+        tier: jobs
+    spec:
+      containers:
+        - name: hangfire-api
+          image: hangfire-api:k8s
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: common-config
+          env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: mongo-root-username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: mongo-root-password
+            - name: HangFireSettings__Storage__ConnectionString
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@hangfiredb/hangfire-webapi?authSource=admin"
+            - name: ElasticConfiguration__Username
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: username
+            - name: ElasticConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /hc
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

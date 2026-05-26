@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-grpc
+  namespace: tedu
+  labels:
+    app: inventory-grpc
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-grpc
+  ports:
+    - name: grpc
+      port: 80
+      targetPort: 80
+      appProtocol: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-grpc
+  namespace: tedu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-grpc
+  template:
+    metadata:
+      labels:
+        app: inventory-grpc
+        tier: business
+    spec:
+      containers:
+        - name: inventory-grpc
+          image: inventory-grpc:k8s
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: grpc
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Development"
+            - name: ASPNETCORE_URLS
+              value: "http://0.0.0.0:80"
+            - name: MongoDbSettings__ConnectionString
+              value: "mongodb://inventorydb"
+            - name: MongoDbSettings__DatabaseName
+              value: "InventoryDb"
+            - name: ElasticConfiguration__Uri
+              value: "http://elasticsearch:9200"
+            - name: ElasticConfiguration__Username
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: username
+            - name: ElasticConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-credentials
+                  key: password
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

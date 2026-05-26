@@ -9,7 +9,7 @@ services:
       ACCEPT_EULA: 'Y'
     volumes:
       - tedu_identity_sqlserver_data:/var/opt/mssql
-    restart: always
+    # restart: always
     ports:
       - '1436:1433'
 
@@ -49,7 +49,7 @@ services:
     ports:
       - '6011:80'
       # - '7011:443'
-    restart: always
+    # restart: always
 
 networks:
   default:

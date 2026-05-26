@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tedu
+
+resources:
+  - 00-namespace.yaml
+  - 01-secrets.yaml
+  - 02-configmaps.yaml
+  # Databases
+  - 10-databases/mysql-productdb.yaml
+  - 10-databases/postgres-customerdb.yaml
+  - 10-databases/redis-basketdb.yaml
+  - 10-databases/mssql-orderdb.yaml
+  - 10-databases/mssql-identitydb.yaml
+  - 10-databases/mongo-inventorydb.yaml
+  - 10-databases/mongo-hangfiredb.yaml
+  # Infrastructure
+  - 20-infrastructure/rabbitmq.yaml
+  - 20-infrastructure/elasticsearch.yaml
+  - 20-infrastructure/kibana.yaml
+  # Services
+  - 30-services/tedu-identity-api.yaml
+  - 30-services/product-api.yaml
+  - 30-services/customer-api.yaml
+  - 30-services/basket-api.yaml
+  - 30-services/ordering-api.yaml
+  - 30-services/inventory-product-api.yaml
+  - 30-services/inventory-grpc.yaml
+  - 30-services/hangfire-api.yaml
+  - 30-services/apigw-ocelot.yaml
+  - 30-services/webstatus.yaml
+  - 30-services/frontend.yaml
+  # Ingress + HPA
+  - 40-ingress.yaml
+  - 50-hpa.yaml
+
+labels:
+  - includeSelectors: true
+    pairs:
+      project: tedu-microservices
+      managed-by: kustomize
